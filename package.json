@@ -1,0 +1,19 @@
+{
+  "name": "vpoll-client",
+  "version": "0.1.0",
+  "description": "Hackday project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/krystianH/vpoll-client.git"
+  },
+  "author": "MTGx",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/krystianH/vpoll-client/issues"
+  },
+  "homepage": "https://github.com/krystianH/vpoll-client#readme"
+}
