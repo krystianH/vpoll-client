@@ -6,7 +6,7 @@ Messages
 
 CreatePoll. Used to start a new poll
 
-...
+```javascript
 {
     "clientID": "5D7856F9-5495-41C7-B005-F7D870C25161", //Id of the client sending the message GUID
     "messageID": "1095C221-A635-4F41-8637-C48EF67A69D9", //Id of the the message GUID
@@ -28,11 +28,11 @@ CreatePoll. Used to start a new poll
         }
     ]
 }
-...
+```
 
 Responses 
 
-...
+```javascript
 {
     "clientID": "5D7856F9-5495-41C7-B005-F7D870C25162", //Who sent this message
     "messageID": "1095C221-A635-4F41-8637-C48EF67A69DA", //Id of message
@@ -45,4 +45,4 @@ Responses
         }
     ]
 }
-...
+```
