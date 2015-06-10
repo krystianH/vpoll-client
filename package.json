@@ -1,6 +1,6 @@
 {
   "name": "vpoll-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Hackday project",
   "main": "app.js",
   "scripts": {
