@@ -13,7 +13,7 @@ module.exports = {
         exclude: /node_modules/,
         loader: 'uglify!babel?optional[]=runtime'
       },
-      { test: /\.less$/, loader: 'style-loader!css-loader!less-loader' },
+      { test: /\.less$/, loader: 'style-loader!css-loader!autoprefixer-loader!less-loader' },
       { test: /\.(png|jpg)$/, loader: 'url-loader?limit=8192'},
     ]
   }
