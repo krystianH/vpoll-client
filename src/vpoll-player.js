@@ -1,15 +1,13 @@
-use 'strict';
+'use strict';
 
-let vjs = require('video.js');
+require('./vpoll-player.less');
+
+import vjs from 'video.js';
 
 window.vjs = window.vjs || vjs;
 window.videojs = window.videojs || vjs;
+window.vPollPlayer = vPollPlayer;
 
-module.exports = function vPollPlayer(elementId, options) {
-
-	var player = vjs(elementId, options);
-
-
-	return player;
-
+export default function vPollPlayer(elementId, options) {
+	return vjs(elementId, options);
 };
