@@ -11,10 +11,10 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        loader: 'babel?optional[]=runtime'
+        loader: 'uglify!babel?optional[]=runtime'
       },
       { test: /\.less$/, loader: 'style-loader!css-loader!less-loader' },
-      { test: /\.(png|jpg)$/, loader: 'url-loader?limit=8192'}
+      { test: /\.(png|jpg)$/, loader: 'url-loader?limit=8192'},
     ]
   }
 };
