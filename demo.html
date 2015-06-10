@@ -8,7 +8,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      window.player = vPollPlayer('test-video', {});
+      window.player = vPollPlayer('test-video', {
+        socketUrl: ':3000/'
+      });
     }, false);
 
   </script>
