@@ -4,7 +4,8 @@
   "description": "Hackday project",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "gulp lint"
   },
   "repository": {
     "type": "git",
@@ -24,8 +25,10 @@
     "less": "^2.5.1",
     "less-loader": "^2.2.0",
     "node-libs-browser": "^0.5.2",
+    "pre-commit": "0.0.11",
     "style-loader": "^0.12.3",
     "uglify-loader": "^1.2.0",
-    "webpack": "^1.9.10"
+    "webpack": "^1.9.10",
+    "video.js": "4.12.7"
   }
 }
