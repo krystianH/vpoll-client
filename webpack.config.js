@@ -10,6 +10,7 @@ module.exports = {
   },
   resolve: {
     alias: {
+      'video.js': 'video.js/dist/video-js/video.dev.js',
       'videojs-contrib-media-sources': 'videojs-contrib-media-sources/src/videojs-media-sources.js',
       'videojs-contrib-hls': '../vendor/videojs.hls-0.17.1.js'
     }
