@@ -33,7 +33,7 @@ vjs.FormPoll = vjs.Component.extend({
     overlay.appendChild(form);
 
     return overlay;
-  };
+  }
 });
 
-vjs.formPoll.prototype.options_ = {};
+vjs.FormPoll.prototype.options_ = {};

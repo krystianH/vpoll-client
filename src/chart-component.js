@@ -11,7 +11,7 @@ vjs.Chart = vjs.Button.extend({
   },
   onClick: function(evt) {
     alert("a");
-  };
+  }
 });
 
 vjs.Chart.prototype.buttonText = 'button text';
