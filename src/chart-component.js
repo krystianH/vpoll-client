@@ -7,10 +7,10 @@ vjs.Chart = vjs.Button.extend({
     vjs.Button.call(this, player, options);
   },
   buildCSSClass() {
-    return 'vjs-chart' + vjs.Button.prototype.buildCSSClass.call(this);
+    return 'vpoll-chart ' + vjs.Button.prototype.buildCSSClass.call(this);
   },
   onClick(evt) {
-    alert("a");
+    alert('a');
   }
 });
 

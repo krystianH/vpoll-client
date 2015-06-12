@@ -24,22 +24,22 @@ export default function vPollPlayer(elementId, options) {
   let player = vjs(elementId, options);
 
   let chartComponent = new vjs.Chart(player, {});
-  let chartEl = player.addChild(chartComponent);
+  player.addChild(chartComponent);
 
   let pollComponent = new vjs.FormPoll(player, {});
-  let pollEl = player.addChild(pollComponent);
+  player.addChild(pollComponent);
+
+  // Poll form calls on this function onSubmit
+  window.sendPoll = function() {
+    console.log('No logic for sending implemented .... hiding poll');
+    pollComponent.addClass('hide-el');
+  };
+
+  // Called in order to display the poll form
+  window.askPoll = function() {
+    console.log('Showing poll form');
+    pollComponent.removeClass('hide-el');
+  };
 
   return player;
 };
-
-// Poll form calls on this function onSubmit
-window.sendPoll = function() {
-  console.log('No logic for sending implemented .... hiding poll');
-  document.getElementById('vjs-form-overlay').className = 'hide-el';
-}
-
-// Called in order to display the poll form
-window.askPoll = function() {
-  console.log('Showing poll form');
-  document.getElementById('vjs-form-overlay').className = 'show-el';
-}
