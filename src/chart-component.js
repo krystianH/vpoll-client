@@ -2,27 +2,27 @@
 
 let vjs = require('video.js');
 
-vjs.Chart = vjs.Button.extend({
+vjs.Chart = vjs.Component.extend({
 	init: function(player, options) {
-		vjs.Button.call( this, player, options);
+		vjs.Component.call( this, player, options);
 	}
 });
 
-vjs.Chart.prototype.buttonText = 'button text';
-
 vjs.Chart.prototype.options_ = {};
 
-vjs.Chart.prototype.buildCSSClass = function() {
-	return 'vjs-chart' + vjs.Button.prototype.buildCSSClass.call(this);
-};
+vjs.Chart.prototype.createEl = function(tagName, props) {
 
-vjs.Chart.prototype.onClick = function ( e ) {
-	alert("a");
-};
+	var container = vjs.createEl('div', {className: 'vjs-chart-component hidden'});
+	var title = vjs.createEl('h3',{className: 'poll-title'});
+	var canvas = vjs.createEl('canvas',{className: 'poll-chart', id: 'pollChart'})
+	var closeButton = vjs.createEl('div',{className: 'close-thick'});
 
-/*vjs.Chart.prototype.createEl = function(tagName, props) {
-	var container = vjs.createEl('div', {className: 'vjs-container'});
+	closeButton.onclick = () => container.className += " hidden";
+
+	container.appendChild(title);
+	container.appendChild(canvas);
+	container.appendChild(closeButton);
+
 	this.contentEl_ = container;
-	console.log("aaz");
 	return container;
-}*/
+}
