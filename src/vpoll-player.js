@@ -4,9 +4,9 @@ require('./vpoll-player.less');
 
 import vjs from 'video.js';
 import io from 'socket.io-client';
+import 'videojs-contrib-media-sources';
+import 'videojs-contrib-hls';
 
-window.vjs = window.vjs || vjs;
-window.videojs = window.videojs || vjs;
 window.vPollPlayer = vPollPlayer;
 
 export default function vPollPlayer(elementId, options) {
@@ -16,5 +16,5 @@ export default function vPollPlayer(elementId, options) {
 
   socket.on('message', (msg) => console.log(msg));
 
-	return vjs(elementId, options);
+  return vjs(elementId, options);
 };
