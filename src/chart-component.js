@@ -7,7 +7,7 @@ vjs.Chart = vjs.Component.extend({
     vjs.Component.call(this, player, options);
   },
   createEl: function(tagName, props) {
-    let container = vjs.createEl('div', { className: 'vjs-chart-component hidden' });
+    let container = vjs.createEl('div', { className: 'vpoll-chart-component hidden' });
     let title = vjs.createEl('h3', { className: 'poll-title' });
     let canvas = vjs.createEl('canvas', { className: 'poll-chart', id: 'pollChart' })
     let closeButton = vjs.createEl('div', { className: 'close-thick' });

@@ -29,41 +29,39 @@
 }
 
 .close-thick:hover {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 /* Dialog */
 
-.vjs-chart-component {
-	background: #FFF;
-	border: 2px solid #ccc;
-	border-radius: 5px;
-	margin: 20px;
-	position: absolute;
-	width: 190px;
-	padding-left: 6px;
-	padding-top: 20px;
-	right: 0;
-	bottom: 15%;
-	opacity: 0.8;
-	max-height: 1000px; //max-height for transition, since height 0<->auto doesnt work
-	transition: 3s max-height;
-	overflow:hidden;
-	&.hidden {
-		opacity: 0;
-		max-height: 0;
-	}
+.vpoll-chart-component {
+  background: #FFF;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  margin: 20px;
+  position: absolute;
+  width: 190px;
+  padding-left: 6px;
+  padding-top: 20px;
+  right: 0;
+  bottom: 15%;
+  opacity: 0.8;
+  max-height: 1000px; //max-height for transition, since height 0<->auto doesnt work
+  transition: 3s max-height;
+  overflow:hidden;
+  &.hidden {
+    opacity: 0;
+    max-height: 0;
+  }
 }
 
 .poll-title {
-  	margin: 3px 0 5px 0;
-  	font-size: 14px;
-  	color:#858586;
+  margin: 3px 0 5px 0;
+  font-size: 14px;
+  color:#858586;
 }
 
 .poll-chart {
-	width: 200px;
-	height: 200px;
+  width: 200px;
+  height: 200px;
 }
-
-.hide-el { display: none; }

@@ -40,13 +40,13 @@ export default function vPollPlayer(elementId, options) {
   // Poll form calls on this function onSubmit
   window.sendPoll = function() {
     console.log('No logic for sending implemented .... hiding poll');
-    pollComponent.addClass('hide-el');
+    pollComponent.addClass('vjs-hidden');
   };
 
   // Called in order to display the poll form
   window.askPoll = function() {
     console.log('Showing poll form');
-    pollComponent.removeClass('hide-el');
+    pollComponent.removeClass('vjs-hidden');
   };
 
   return player;
