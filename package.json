@@ -35,6 +35,7 @@
     "video.js": "4.12.7",
     "webpack": "^1.9.10",
     "videojs-contrib-hls": "^0.17.1",
-    "videojs-contrib-media-sources": "0.3.1"
+    "videojs-contrib-media-sources": "0.3.1",
+    "chart-js": "git+ssh://git@github.com:nnnick/Chart.js.git#v1.0.2"
   }
 }
