@@ -3,13 +3,13 @@
 let vjs = require('video.js');
 
 vjs.FormPoll = vjs.Component.extend({
-  init: function(player, options) {
+  init(player, options) {
     vjs.Component.call( this, player, options);
   },
-  buildCSSClass: function() {
+  buildCSSClass() {
     return 'vjs-poll-form' + vjs.Button.prototype.buildCSSClass.call(this);
   },
-  createEl: function(type, props) {
+  createEl(type, props) {
     let overlay = videojs.createEl('div', {
       className: 'hide-el',
       id: 'vjs-form-overlay'

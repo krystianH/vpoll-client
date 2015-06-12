@@ -3,13 +3,13 @@
 let vjs = require('video.js');
 
 vjs.Chart = vjs.Button.extend({
-	init: function(player, options) {
+	init(player, options) {
 		vjs.Button.call(this, player, options);
 	},
-  buildCSSClass: function() {
+  buildCSSClass() {
     return 'vjs-chart' + vjs.Button.prototype.buildCSSClass.call(this);
   },
-  onClick: function(evt) {
+  onClick(evt) {
     alert("a");
   }
 });
