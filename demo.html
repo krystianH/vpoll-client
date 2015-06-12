@@ -22,29 +22,5 @@
     <track kind="subtitles" src="node_modules/video.js/dist/video-js/demo.captions.vtt" srclang="en" label="English"></track><!-- Tracks need an ending tag thanks to IE9 -->
     <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
   </video>
-
-  <script type="text/javascript">
-    document.addEventListener("DOMContentLoaded", function(event) {
-      window.player.ready(function() {
-        videojs.FormOverlay = videojs.Component.extend({
-          init: function(player, options) {
-            // call the parent constructor
-            videojs.Component.call(this, player, {});
-          },
-          createEl: function(tagName, props) {
-            return videojs.createEl('div', {
-              className: 'vjs-form-overlay',
-              innerHtml: '<p>Tjeeeena!</p>'
-            });
-          },
-          show: function() {
-            this.el_.style.opacity = '1';
-          }
-        });
-
-        player.addChild(videojs.FormOverlay);
-      });
-    });
-  </script>
 </body>
 </html>

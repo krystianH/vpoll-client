@@ -3,9 +3,9 @@
 let vjs = require('video.js');
 
 vjs.Chart = vjs.Button.extend({
-	init(player, options) {
-		vjs.Button.call(this, player, options);
-	},
+  init(player, options) {
+    vjs.Button.call(this, player, options);
+  },
   buildCSSClass() {
     return 'vjs-chart' + vjs.Button.prototype.buildCSSClass.call(this);
   },

@@ -2,7 +2,7 @@
 
 require('./vpoll-player.less');
 require('./chart-component');
-require('./poll-form-component');
+require('./form-poll-component');
 
 import vjs from 'video.js';
 import hls from 'videojs-contrib-hls';
