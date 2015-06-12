@@ -6,6 +6,12 @@ module.exports = {
     path: './dist',
     filename: 'vpoll-player.js'
   },
+  resolve: {
+   alias: {
+     'videojs-contrib-hls': 'videojs-contrib-hls/src/videojs-hls.js',
+     'video.js': 'video.js/dist/video-js/video.dev.js'
+   }
+ },
   module: {
     loaders: [
       { test: /\.js$/, exclude: /node_modules/, loader: 'uglify!babel?optional[]=runtime' },
