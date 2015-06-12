@@ -167,7 +167,7 @@
 	  chartOptions.scaleOverride = true;
 	  chartOptions.scaleLabel = '<%=value%>%';
 
-	  var ctx = document.querySelector('#pollChart').getContext('2d');
+	  var ctx = chartCmp.el().querySelector('#pollChart').getContext('2d');
 
 	  return new _chartJs2['default'](ctx).Bar(chartData, chartOptions);
 	}
@@ -28306,7 +28306,7 @@
 	  },
 	  createEl: function createEl(type, props) {
 	    var overlay = vjs.createEl('div', {
-	      className: 'vpoll-form-overlay hide-el'
+	      className: 'vpoll-form-overlay vjs-hidden'
 	    });
 
 	    var formElements = '<fieldset><legend> Question to ask </legend>\n      <p><label for="question">Question: </label>\n      <input type="text" name="question" id="question" value=""></p></fieldset>\n      <fieldset><legend> Possible answers </legend>\n      <p><label for="alt_1">Alternative 1: </label>\n      <input type="text" name="question" id="alt_1" value=""></p>\n      <p><label for="alt_2">Alternative 2: </label>\n      <input type="text" name="question" id="alt_2" value=""></p></fieldset>\n      <p><input type="button" value="Submit" onClick="sendPoll()"></p>';

@@ -25,7 +25,7 @@ export default function createChart(chartCmp) {
   chartOptions.scaleOverride = true;
   chartOptions.scaleLabel = "<%=value%>%";
 
-  let ctx = document.querySelector('#pollChart').getContext("2d");
+  let ctx = chartCmp.el().querySelector('#pollChart').getContext("2d");
 
   return new Chart(ctx).Bar(chartData, chartOptions);
 }

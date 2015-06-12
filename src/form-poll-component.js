@@ -8,7 +8,7 @@ vjs.FormPoll = vjs.Component.extend({
   },
   createEl(type, props) {
     let overlay = vjs.createEl('div', {
-      className: 'vpoll-form-overlay hide-el'
+      className: 'vpoll-form-overlay vjs-hidden'
     });
 
     let formElements = `<fieldset><legend> Question to ask </legend>
