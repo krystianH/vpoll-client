@@ -1,6 +1,7 @@
 'use strict';
 
 require('./vpoll-player.less');
+require('./chart-component');
 
 import vjs from 'video.js';
 import io from 'socket.io-client';
@@ -11,6 +12,7 @@ window.vjs = window.vjs || vjs;
 window.videojs = window.videojs || vjs;
 window.vPollPlayer = vPollPlayer;
 
+
 export default function vPollPlayer(elementId, options) {
   if (!options.socketUrl) throw new Error('options.socketUrl needs to be specified');
 
@@ -18,5 +20,10 @@ export default function vPollPlayer(elementId, options) {
 
   socket.on('message', (msg) => console.log(msg));
 
-	return vjs(elementId, options);
+  let player = vjs(elementId, options);
+
+  let chartComponent = new vjs.Chart( player, options );
+  let chartEl = player.addChild(chartComponent);
+	
+  return player;
 };
