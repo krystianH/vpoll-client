@@ -10,7 +10,7 @@
     document.addEventListener('DOMContentLoaded', function () {
       window.player = vPollPlayer('test-video', {
         socketUrl: ':3000/',
-        techOrder: ['Hls', 'html5'],
+        techOrder: ['hls', 'html5', 'flash']
       });
     }, false);
 
@@ -18,8 +18,8 @@
 </head>
 <body>
   <video id="test-video" class="video-js vjs-default-skin" controls preload="none" width="800" height="450" poster="http://video-js.zencoder.com/oceans-clip.png">
-   <source src="http://c.brightcove.com/services/mobile/streaming/index/master.m3u8?videoId=4054612357001" type="application/x-mpegURL" />
-	<track kind="captions" src="node_modules/video.js/dist/video-js/demo.captions.vtt" srclang="en" label="English"></track><!-- Tracks need an ending tag thanks to IE9 -->
+    <source src="http://c.brightcove.com/services/mobile/streaming/index/master.m3u8?videoId=4054612357001" type="application/x-mpegURL" />
+    <track kind="captions" src="node_modules/video.js/dist/video-js/demo.captions.vtt" srclang="en" label="English"></track><!-- Tracks need an ending tag thanks to IE9 -->
     <track kind="subtitles" src="node_modules/video.js/dist/video-js/demo.captions.vtt" srclang="en" label="English"></track><!-- Tracks need an ending tag thanks to IE9 -->
     <p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
   </video>
@@ -29,7 +29,7 @@
 
   document.addEventListener("DOMContentLoaded", function(event) {
     window.player.ready(function(){
-      
+
      	videojs.FormOverlay = videojs.Component.extend({
 	        init: function(player, options) {
 	            // call the parent constructor
@@ -39,13 +39,13 @@
     	});
 
       	videojs.FormOverlay.prototype.createEl = function(tagName, props) {
-        
+
         	var overlay = videojs.createEl('div', {
             	className: 'vjs-form-overlay',
             	innerHtml: '<p>Tjeeeena!</p>'
         	});
 
-        	return this; 
+        	return this;
 
       	};
 

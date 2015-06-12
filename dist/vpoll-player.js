@@ -44,7 +44,7 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";function vPollPlayer(e,o){if(!o.socketUrl)throw new Error("options.socketUrl needs to be specified");var r=window.socket=_socketIoClient2["default"](o.socketUrl);r.on("message",function(e){return console.log(e)});var t=_videoJs2["default"](e,o),l=new _videoJs2["default"].Chart(t,o),i=(t.addChild(l),new _videoJs2["default"].formPoll(t,o));t.addChild(i);return t}var _Object$defineProperty=__webpack_require__(1)["default"],_interopRequireDefault=__webpack_require__(5)["default"];_Object$defineProperty(exports,"__esModule",{value:!0}),exports["default"]=vPollPlayer;var _videoJs=__webpack_require__(6),_videoJs2=_interopRequireDefault(_videoJs),_videojsContribHls=__webpack_require__(9),_videojsContribHls2=_interopRequireDefault(_videojsContribHls),_socketIoClient=__webpack_require__(10),_socketIoClient2=_interopRequireDefault(_socketIoClient),_chartJs=__webpack_require__(62),_chartJs2=_interopRequireDefault(_chartJs);__webpack_require__(63),__webpack_require__(71),__webpack_require__(72),window.chart=window.chart||_chartJs2["default"],window.vjs=window.vjs||_videoJs2["default"],window.videojs=window.videojs||_videoJs2["default"],window.vPollPlayer=vPollPlayer,window.sendPoll=function(){console.log("No logic for sending implemented .... hiding poll"),document.getElementById("vjs-form-overlay").className="hide-el"},window.askPoll=function(){console.log("Showing poll form"),document.getElementById("vjs-form-overlay").className="show-el"},module.exports=exports["default"];
+	"use strict";function vPollPlayer(e,o){if(!o.socketUrl)throw new Error("options.socketUrl needs to be specified");var r=window.socket=_socketIoClient2["default"](o.socketUrl);r.on("message",function(e){return console.log(e)});var t=_videoJs2["default"](e,o),l=new _videoJs2["default"].Chart(t,o),i=(t.addChild(l),new _videoJs2["default"].formPoll(t,o));t.addChild(i);return t}var _Object$defineProperty=__webpack_require__(1)["default"],_interopRequireDefault=__webpack_require__(5)["default"];_Object$defineProperty(exports,"__esModule",{value:!0}),exports["default"]=vPollPlayer;var _videoJs=__webpack_require__(6),_videoJs2=_interopRequireDefault(_videoJs),_videojsContribHls=__webpack_require__(9),_videojsContribHls2=_interopRequireDefault(_videojsContribHls),_socketIoClient=__webpack_require__(10),_socketIoClient2=_interopRequireDefault(_socketIoClient),_chartJs=__webpack_require__(62),_chartJs2=_interopRequireDefault(_chartJs);__webpack_require__(63),__webpack_require__(9),__webpack_require__(64),__webpack_require__(72),__webpack_require__(73),window.chart=window.chart||_chartJs2["default"],window.vPollPlayer=vPollPlayer,window.sendPoll=function(){console.log("No logic for sending implemented .... hiding poll"),document.getElementById("vjs-form-overlay").className="hide-el"},window.askPoll=function(){console.log("Showing poll form"),document.getElementById("vjs-form-overlay").className="show-el"},module.exports=exports["default"];
 	//# sourceMappingURL=out.map.js
 
 /***/ },
@@ -12025,11 +12025,11 @@
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/*
-	 * videojs-hls
-	 * The main file for the HLS project.
-	 * License: https://github.com/videojs/videojs-contrib-hls/blob/master/LICENSE
-	 */
+	var require;var require;/* WEBPACK VAR INJECTION */(function(__webpack_provided_window_dot_videojs) {/*** IMPORTS FROM imports-loader ***/
+	(function() {
+
+	/*! videojs-contrib-hls - v0.17.1 - 2015-06-08
+	* Copyright (c) 2015 Brightcove; Licensed  */
 	(function(window, videojs, document, undefined) {
 	'use strict';
 
@@ -13277,8 +13277,3543 @@
 	  return result;
 	};
 
-	})(window, window.videojs, document);
+	})(window, __webpack_provided_window_dot_videojs, document);
 
+	(function(videojs, undefined) {
+	  var Stream = function() {
+	    this.init = function() {
+	      var listeners = {};
+	      /**
+	       * Add a listener for a specified event type.
+	       * @param type {string} the event name
+	       * @param listener {function} the callback to be invoked when an event of
+	       * the specified type occurs
+	       */
+	      this.on = function(type, listener) {
+	        if (!listeners[type]) {
+	          listeners[type] = [];
+	        }
+	        listeners[type].push(listener);
+	      };
+	      /**
+	       * Remove a listener for a specified event type.
+	       * @param type {string} the event name
+	       * @param listener {function} a function previously registered for this
+	       * type of event through `on`
+	       */
+	      this.off = function(type, listener) {
+	        var index;
+	        if (!listeners[type]) {
+	          return false;
+	        }
+	        index = listeners[type].indexOf(listener);
+	        listeners[type].splice(index, 1);
+	        return index > -1;
+	      };
+	      /**
+	       * Trigger an event of the specified type on this stream. Any additional
+	       * arguments to this function are passed as parameters to event listeners.
+	       * @param type {string} the event name
+	       */
+	      this.trigger = function(type) {
+	        var callbacks, i, length, args;
+	        callbacks = listeners[type];
+	        if (!callbacks) {
+	          return;
+	        }
+	        args = Array.prototype.slice.call(arguments, 1);
+	        length = callbacks.length;
+	        for (i = 0; i < length; ++i) {
+	          callbacks[i].apply(this, args);
+	        }
+	      };
+	      /**
+	       * Destroys the stream and cleans up.
+	       */
+	      this.dispose = function() {
+	        listeners = {};
+	      };
+	    };
+	  };
+	  /**
+	   * Forwards all `data` events on this stream to the destination stream. The
+	   * destination stream should provide a method `push` to receive the data
+	   * events as they arrive.
+	   * @param destination {stream} the stream that will receive all `data` events
+	   * @see http://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
+	   */
+	  Stream.prototype.pipe = function(destination) {
+	    this.on('data', function(data) {
+	      destination.push(data);
+	    });
+	  };
+
+	  videojs.Hls.Stream = Stream;
+	})(__webpack_provided_window_dot_videojs);
+
+	(function(window) {
+
+	window.videojs = window.videojs || {};
+	window.videojs.Hls = window.videojs.Hls || {};
+
+	var hls = window.videojs.Hls;
+
+	// (type:uint, extraData:Boolean = false) extends ByteArray
+	hls.FlvTag = function(type, extraData) {
+	  var
+	    // Counter if this is a metadata tag, nal start marker if this is a video
+	    // tag. unused if this is an audio tag
+	    adHoc = 0, // :uint
+
+	    // checks whether the FLV tag has enough capacity to accept the proposed
+	    // write and re-allocates the internal buffers if necessary
+	    prepareWrite = function(flv, count) {
+	      var
+	        bytes,
+	        minLength = flv.position + count;
+	      if (minLength < flv.bytes.byteLength) {
+	        // there's enough capacity so do nothing
+	        return;
+	      }
+
+	      // allocate a new buffer and copy over the data that will not be modified
+	      bytes = new Uint8Array(minLength * 2);
+	      bytes.set(flv.bytes.subarray(0, flv.position), 0);
+	      flv.bytes = bytes;
+	      flv.view = new DataView(flv.bytes.buffer);
+	    },
+
+	    // commonly used metadata properties
+	    widthBytes = hls.FlvTag.widthBytes || new Uint8Array('width'.length),
+	    heightBytes = hls.FlvTag.heightBytes || new Uint8Array('height'.length),
+	    videocodecidBytes = hls.FlvTag.videocodecidBytes || new Uint8Array('videocodecid'.length),
+	    i;
+
+	  if (!hls.FlvTag.widthBytes) {
+	    // calculating the bytes of common metadata names ahead of time makes the
+	    // corresponding writes faster because we don't have to loop over the
+	    // characters
+	    // re-test with test/perf.html if you're planning on changing this
+	    for (i = 0; i < 'width'.length; i++) {
+	      widthBytes[i] = 'width'.charCodeAt(i);
+	    }
+	    for (i = 0; i < 'height'.length; i++) {
+	      heightBytes[i] = 'height'.charCodeAt(i);
+	    }
+	    for (i = 0; i < 'videocodecid'.length; i++) {
+	      videocodecidBytes[i] = 'videocodecid'.charCodeAt(i);
+	    }
+
+	    hls.FlvTag.widthBytes = widthBytes;
+	    hls.FlvTag.heightBytes = heightBytes;
+	    hls.FlvTag.videocodecidBytes = videocodecidBytes;
+	  }
+
+	  this.keyFrame = false; // :Boolean
+
+	  switch(type) {
+	  case hls.FlvTag.VIDEO_TAG:
+	    this.length = 16;
+	    break;
+	  case hls.FlvTag.AUDIO_TAG:
+	    this.length = 13;
+	    this.keyFrame = true;
+	    break;
+	  case hls.FlvTag.METADATA_TAG:
+	    this.length = 29;
+	    this.keyFrame = true;
+	    break;
+	  default:
+	    throw("Error Unknown TagType");
+	  }
+
+	  this.bytes = new Uint8Array(16384);
+	  this.view = new DataView(this.bytes.buffer);
+	  this.bytes[0] = type;
+	  this.position = this.length;
+	  this.keyFrame = extraData; // Defaults to false
+
+	  // presentation timestamp
+	  this.pts = 0;
+	  // decoder timestamp
+	  this.dts = 0;
+
+	  // ByteArray#writeBytes(bytes:ByteArray, offset:uint = 0, length:uint = 0)
+	  this.writeBytes = function(bytes, offset, length) {
+	    var
+	      start = offset || 0,
+	      end;
+	    length = length || bytes.byteLength;
+	    end = start + length;
+
+	    prepareWrite(this, length);
+	    this.bytes.set(bytes.subarray(start, end), this.position);
+
+	    this.position += length;
+	    this.length = Math.max(this.length, this.position);
+	  };
+
+	  // ByteArray#writeByte(value:int):void
+	  this.writeByte = function(byte) {
+	    prepareWrite(this, 1);
+	    this.bytes[this.position] = byte;
+	    this.position++;
+	    this.length = Math.max(this.length, this.position);
+	  };
+
+	  // ByteArray#writeShort(value:int):void
+	  this.writeShort = function(short) {
+	    prepareWrite(this, 2);
+	    this.view.setUint16(this.position, short);
+	    this.position += 2;
+	    this.length = Math.max(this.length, this.position);
+	  };
+
+	  // Negative index into array
+	  // (pos:uint):int
+	  this.negIndex = function(pos) {
+	    return this.bytes[this.length - pos];
+	  };
+
+	  // The functions below ONLY work when this[0] == VIDEO_TAG.
+	  // We are not going to check for that because we dont want the overhead
+	  // (nal:ByteArray = null):int
+	  this.nalUnitSize = function() {
+	    if (adHoc === 0) {
+	      return 0;
+	    }
+
+	    return this.length - (adHoc + 4);
+	  };
+
+	  this.startNalUnit = function() {
+	    // remember position and add 4 bytes
+	    if (adHoc > 0) {
+	      throw new Error("Attempted to create new NAL wihout closing the old one");
+	    }
+
+	    // reserve 4 bytes for nal unit size
+	    adHoc = this.length;
+	    this.length += 4;
+	    this.position = this.length;
+	  };
+
+	  // (nal:ByteArray = null):void
+	  this.endNalUnit = function(nalContainer) {
+	    var
+	      nalStart, // :uint
+	      nalLength; // :uint
+
+	    // Rewind to the marker and write the size
+	    if (this.length === adHoc + 4) {
+	      // we started a nal unit, but didnt write one, so roll back the 4 byte size value
+	      this.length -= 4;
+	    } else if (adHoc > 0) {
+	      nalStart = adHoc + 4;
+	      nalLength = this.length - nalStart;
+
+	      this.position = adHoc;
+	      this.view.setUint32(this.position, nalLength);
+	      this.position = this.length;
+
+	      if (nalContainer) {
+	        // Add the tag to the NAL unit
+	        nalContainer.push(this.bytes.subarray(nalStart, nalStart + nalLength));
+	      }
+	    }
+
+	    adHoc = 0;
+	  };
+
+	  /**
+	   * Write out a 64-bit floating point valued metadata property. This method is
+	   * called frequently during a typical parse and needs to be fast.
+	   */
+	  // (key:String, val:Number):void
+	  this.writeMetaDataDouble = function(key, val) {
+	    var i;
+	    prepareWrite(this, 2 + key.length + 9);
+
+	    // write size of property name
+	    this.view.setUint16(this.position, key.length);
+	    this.position += 2;
+
+	    // this next part looks terrible but it improves parser throughput by
+	    // 10kB/s in my testing
+
+	    // write property name
+	    if (key === 'width') {
+	      this.bytes.set(widthBytes, this.position);
+	      this.position += 5;
+	    } else if (key === 'height') {
+	      this.bytes.set(heightBytes, this.position);
+	      this.position += 6;
+	    } else if (key === 'videocodecid') {
+	      this.bytes.set(videocodecidBytes, this.position);
+	      this.position += 12;
+	    } else {
+	      for (i = 0; i < key.length; i++) {
+	        this.bytes[this.position] = key.charCodeAt(i);
+	        this.position++;
+	      }
+	    }
+
+	    // skip null byte
+	    this.position++;
+
+	    // write property value
+	    this.view.setFloat64(this.position, val);
+	    this.position += 8;
+
+	    // update flv tag length
+	    this.length = Math.max(this.length, this.position);
+	    ++adHoc;
+	  };
+
+	  // (key:String, val:Boolean):void
+	  this.writeMetaDataBoolean = function(key, val) {
+	    var i;
+	    prepareWrite(this, 2);
+	    this.view.setUint16(this.position, key.length);
+	    this.position += 2;
+	    for (i = 0; i < key.length; i++) {
+	      console.assert(key.charCodeAt(i) < 255);
+	      prepareWrite(this, 1);
+	      this.bytes[this.position] = key.charCodeAt(i);
+	      this.position++;
+	    }
+	    prepareWrite(this, 2);
+	    this.view.setUint8(this.position, 0x01);
+	    this.position++;
+	    this.view.setUint8(this.position, val ? 0x01 : 0x00);
+	    this.position++;
+	    this.length = Math.max(this.length, this.position);
+	    ++adHoc;
+	  };
+
+	  // ():ByteArray
+	  this.finalize = function() {
+	    var
+	      dtsDelta, // :int
+	      len; // :int
+
+	    switch(this.bytes[0]) {
+	      // Video Data
+	    case hls.FlvTag.VIDEO_TAG:
+	      this.bytes[11] = ((this.keyFrame || extraData) ? 0x10 : 0x20 ) | 0x07; // We only support AVC, 1 = key frame (for AVC, a seekable frame), 2 = inter frame (for AVC, a non-seekable frame)
+	      this.bytes[12] = extraData ?  0x00 : 0x01;
+
+	      dtsDelta = this.pts - this.dts;
+	      this.bytes[13] = (dtsDelta & 0x00FF0000) >>> 16;
+	      this.bytes[14] = (dtsDelta & 0x0000FF00) >>>  8;
+	      this.bytes[15] = (dtsDelta & 0x000000FF) >>>  0;
+	      break;
+
+	    case hls.FlvTag.AUDIO_TAG:
+	      this.bytes[11] = 0xAF; // 44 kHz, 16-bit stereo
+	      this.bytes[12] = extraData ? 0x00 : 0x01;
+	      break;
+
+	    case hls.FlvTag.METADATA_TAG:
+	      this.position = 11;
+	      this.view.setUint8(this.position, 0x02); // String type
+	      this.position++;
+	      this.view.setUint16(this.position, 0x0A); // 10 Bytes
+	      this.position += 2;
+	      // set "onMetaData"
+	      this.bytes.set([0x6f, 0x6e, 0x4d, 0x65,
+	                      0x74, 0x61, 0x44, 0x61,
+	                      0x74, 0x61], this.position);
+	      this.position += 10;
+	      this.bytes[this.position] = 0x08; // Array type
+	      this.position++;
+	      this.view.setUint32(this.position, adHoc);
+	      this.position = this.length;
+	      this.bytes.set([0, 0, 9], this.position);
+	      this.position += 3; // End Data Tag
+	      this.length = this.position;
+	      break;
+	    }
+
+	    len = this.length - 11;
+
+	    // write the DataSize field
+	    this.bytes[ 1] = (len & 0x00FF0000) >>> 16;
+	    this.bytes[ 2] = (len & 0x0000FF00) >>>  8;
+	    this.bytes[ 3] = (len & 0x000000FF) >>>  0;
+	    // write the Timestamp
+	    this.bytes[ 4] = (this.dts & 0x00FF0000) >>> 16;
+	    this.bytes[ 5] = (this.dts & 0x0000FF00) >>>  8;
+	    this.bytes[ 6] = (this.dts & 0x000000FF) >>>  0;
+	    this.bytes[ 7] = (this.dts & 0xFF000000) >>> 24;
+	    // write the StreamID
+	    this.bytes[ 8] = 0;
+	    this.bytes[ 9] = 0;
+	    this.bytes[10] = 0;
+
+	    // Sometimes we're at the end of the view and have one slot to write a
+	    // uint32, so, prepareWrite of count 4, since, view is uint8
+	    prepareWrite(this, 4);
+	    this.view.setUint32(this.length, this.length);
+	    this.length += 4;
+	    this.position += 4;
+
+	    // trim down the byte buffer to what is actually being used
+	    this.bytes = this.bytes.subarray(0, this.length);
+	    this.frameTime = hls.FlvTag.frameTime(this.bytes);
+	    console.assert(this.bytes.byteLength === this.length);
+	    return this;
+	  };
+	};
+
+	hls.FlvTag.AUDIO_TAG = 0x08; // == 8, :uint
+	hls.FlvTag.VIDEO_TAG = 0x09; // == 9, :uint
+	hls.FlvTag.METADATA_TAG = 0x12; // == 18, :uint
+
+	// (tag:ByteArray):Boolean {
+	hls.FlvTag.isAudioFrame = function(tag) {
+	  return hls.FlvTag.AUDIO_TAG === tag[0];
+	};
+
+	// (tag:ByteArray):Boolean {
+	hls.FlvTag.isVideoFrame = function(tag) {
+	  return hls.FlvTag.VIDEO_TAG === tag[0];
+	};
+
+	// (tag:ByteArray):Boolean {
+	hls.FlvTag.isMetaData = function(tag) {
+	  return hls.FlvTag.METADATA_TAG === tag[0];
+	};
+
+	// (tag:ByteArray):Boolean {
+	hls.FlvTag.isKeyFrame = function(tag) {
+	  if (hls.FlvTag.isVideoFrame(tag)) {
+	    return tag[11] === 0x17;
+	  }
+
+	  if (hls.FlvTag.isAudioFrame(tag)) {
+	    return true;
+	  }
+
+	  if (hls.FlvTag.isMetaData(tag)) {
+	    return true;
+	  }
+
+	  return false;
+	};
+
+	// (tag:ByteArray):uint {
+	hls.FlvTag.frameTime = function(tag) {
+	  var pts = tag[ 4] << 16; // :uint
+	  pts |= tag[ 5] <<  8;
+	  pts |= tag[ 6] <<  0;
+	  pts |= tag[ 7] << 24;
+	  return pts;
+	};
+
+	/**
+	 * Calculate the media timeline duration represented by an array of
+	 * tags. This function assumes the tags are already pre-sorted by
+	 * presentation timestamp (PTS), in ascending order. Returns zero if
+	 * there are less than two FLV tags to inspect.
+	 * @param tags {array} the FlvTag objects to query
+	 * @return the number of milliseconds between the display time of the
+	 * first tag and the last tag.
+	 */
+	hls.FlvTag.durationFromTags = function(tags) {
+	  if (tags.length < 2) {
+	    return 0;
+	  }
+
+	  var
+	    first = tags[0],
+	    last = tags[tags.length - 1],
+	    frameDuration;
+
+	  // use the interval between the last two tags or assume 24 fps
+	  frameDuration = last.pts - tags[tags.length - 2].pts || (1/24);
+
+	  return (last.pts - first.pts) + frameDuration;
+	};
+
+	})(this);
+
+	(function(window) {
+
+	/**
+	 * Parser for exponential Golomb codes, a variable-bitwidth number encoding
+	 * scheme used by h264.
+	 */
+	window.videojs.Hls.ExpGolomb = function(workingData) {
+	  var
+	    // the number of bytes left to examine in workingData
+	    workingBytesAvailable = workingData.byteLength,
+
+	    // the current word being examined
+	    workingWord = 0, // :uint
+
+	    // the number of bits left to examine in the current word
+	    workingBitsAvailable = 0; // :uint;
+
+	  // ():uint
+	  this.length = function() {
+	    return (8 * workingBytesAvailable);
+	  };
+
+	  // ():uint
+	  this.bitsAvailable = function() {
+	    return (8 * workingBytesAvailable) + workingBitsAvailable;
+	  };
+
+	  // ():void
+	  this.loadWord = function() {
+	    var
+	      position = workingData.byteLength - workingBytesAvailable,
+	      workingBytes = new Uint8Array(4),
+	      availableBytes = Math.min(4, workingBytesAvailable);
+
+	    if (availableBytes === 0) {
+	      throw new Error('no bytes available');
+	    }
+
+	    workingBytes.set(workingData.subarray(position,
+	                                          position + availableBytes));
+	    workingWord = new DataView(workingBytes.buffer).getUint32(0);
+
+	    // track the amount of workingData that has been processed
+	    workingBitsAvailable = availableBytes * 8;
+	    workingBytesAvailable -= availableBytes;
+	  };
+
+	  // (count:int):void
+	  this.skipBits = function(count) {
+	    var skipBytes; // :int
+	    if (workingBitsAvailable > count) {
+	      workingWord          <<= count;
+	      workingBitsAvailable -= count;
+	    } else {
+	      count -= workingBitsAvailable;
+	      skipBytes = count / 8;
+
+	      count -= (skipBytes * 8);
+	      workingBytesAvailable -= skipBytes;
+
+	      this.loadWord();
+
+	      workingWord <<= count;
+	      workingBitsAvailable -= count;
+	    }
+	  };
+
+	  // (size:int):uint
+	  this.readBits = function(size) {
+	    var
+	      bits = Math.min(workingBitsAvailable, size), // :uint
+	      valu = workingWord >>> (32 - bits); // :uint
+
+	    console.assert(size < 32, 'Cannot read more than 32 bits at a time');
+
+	    workingBitsAvailable -= bits;
+	    if (workingBitsAvailable > 0) {
+	      workingWord <<= bits;
+	    } else if (workingBytesAvailable > 0) {
+	      this.loadWord();
+	    }
+
+	    bits = size - bits;
+	    if (bits > 0) {
+	      return valu << bits | this.readBits(bits);
+	    } else {
+	      return valu;
+	    }
+	  };
+
+	  // ():uint
+	  this.skipLeadingZeros = function() {
+	    var leadingZeroCount; // :uint
+	    for (leadingZeroCount = 0 ; leadingZeroCount < workingBitsAvailable ; ++leadingZeroCount) {
+	      if (0 !== (workingWord & (0x80000000 >>> leadingZeroCount))) {
+	        // the first bit of working word is 1
+	        workingWord <<= leadingZeroCount;
+	        workingBitsAvailable -= leadingZeroCount;
+	        return leadingZeroCount;
+	      }
+	    }
+
+	    // we exhausted workingWord and still have not found a 1
+	    this.loadWord();
+	    return leadingZeroCount + this.skipLeadingZeros();
+	  };
+
+	  // ():void
+	  this.skipUnsignedExpGolomb = function() {
+	    this.skipBits(1 + this.skipLeadingZeros());
+	  };
+
+	  // ():void
+	  this.skipExpGolomb = function() {
+	    this.skipBits(1 + this.skipLeadingZeros());
+	  };
+
+	  // ():uint
+	  this.readUnsignedExpGolomb = function() {
+	    var clz = this.skipLeadingZeros(); // :uint
+	    return this.readBits(clz + 1) - 1;
+	  };
+
+	  // ():int
+	  this.readExpGolomb = function() {
+	    var valu = this.readUnsignedExpGolomb(); // :int
+	    if (0x01 & valu) {
+	      // the number is odd if the low order bit is set
+	      return (1 + valu) >>> 1; // add 1 to make it even, and divide by 2
+	    } else {
+	      return -1 * (valu >>> 1); // divide by two then make it negative
+	    }
+	  };
+
+	  // Some convenience functions
+	  // :Boolean
+	  this.readBoolean = function() {
+	    return 1 === this.readBits(1);
+	  };
+
+	  // ():int
+	  this.readUnsignedByte = function() {
+	    return this.readBits(8);
+	  };
+
+	  this.loadWord();
+
+	};
+	})(this);
+
+	(function() {
+	  var
+	    H264ExtraData,
+	    ExpGolomb = __webpack_provided_window_dot_videojs.Hls.ExpGolomb,
+	    FlvTag = __webpack_provided_window_dot_videojs.Hls.FlvTag;
+
+	  __webpack_provided_window_dot_videojs.Hls.H264ExtraData = H264ExtraData = function() {
+	    this.sps = []; // :Array
+	    this.pps = []; // :Array
+	  };
+
+	  H264ExtraData.prototype.extraDataExists = function() { // :Boolean
+	    return this.sps.length > 0;
+	  };
+
+	  // (sizeOfScalingList:int, expGolomb:ExpGolomb):void
+	  H264ExtraData.prototype.scaling_list = function(sizeOfScalingList, expGolomb) {
+	    var
+	      lastScale = 8, // :int
+	      nextScale = 8, // :int
+	      j,
+	      delta_scale; // :int
+
+	    for (j = 0; j < sizeOfScalingList; ++j) {
+	      if (0 !== nextScale) {
+	        delta_scale = expGolomb.readExpGolomb();
+	        nextScale = (lastScale + delta_scale + 256) % 256;
+	        //useDefaultScalingMatrixFlag = ( j = = 0 && nextScale = = 0 )
+	      }
+
+	      lastScale = (nextScale === 0) ? lastScale : nextScale;
+	      // scalingList[ j ] = ( nextScale == 0 ) ? lastScale : nextScale;
+	      // lastScale = scalingList[ j ]
+	    }
+	  };
+
+	  /**
+	   * RBSP: raw bit-stream payload. The actual encoded video data.
+	   *
+	   * SPS: sequence parameter set. Part of the RBSP. Metadata to be applied
+	   * to a complete video sequence, like width and height.
+	   */
+	  H264ExtraData.prototype.getSps0Rbsp = function() { // :ByteArray
+	    var
+	      sps = this.sps[0],
+	      offset = 1,
+	      start = 1,
+	      written = 0,
+	      end = sps.byteLength - 2,
+	      result = new Uint8Array(sps.byteLength);
+
+	    // In order to prevent 0x0000 01 from being interpreted as a
+	    // NAL start code, occurences of that byte sequence in the
+	    // RBSP are escaped with an "emulation byte". That turns
+	    // sequences of 0x0000 01 into 0x0000 0301. When interpreting
+	    // a NAL payload, they must be filtered back out.
+	    while (offset < end) {
+	      if (sps[offset]     === 0x00 &&
+	          sps[offset + 1] === 0x00 &&
+	          sps[offset + 2] === 0x03) {
+	        result.set(sps.subarray(start, offset + 1), written);
+	        written += offset + 1 - start;
+	        start = offset + 3;
+	      }
+	      offset++;
+	    }
+	    result.set(sps.subarray(start), written);
+	    return result.subarray(0, written + (sps.byteLength - start));
+	  };
+
+	  // (pts:uint):FlvTag
+	  H264ExtraData.prototype.metaDataTag = function(pts) {
+	    var
+	      tag = new FlvTag(FlvTag.METADATA_TAG), // :FlvTag
+	      expGolomb, // :ExpGolomb
+	      profile_idc, // :int
+	      chroma_format_idc, // :int
+	      imax, // :int
+	      i, // :int
+
+	      pic_order_cnt_type, // :int
+	      num_ref_frames_in_pic_order_cnt_cycle, // :uint
+
+	      pic_width_in_mbs_minus1, // :int
+	      pic_height_in_map_units_minus1, // :int
+
+	      frame_mbs_only_flag, // :int
+	      frame_cropping_flag, // :Boolean
+
+	      frame_crop_left_offset = 0, // :int
+	      frame_crop_right_offset = 0, // :int
+	      frame_crop_top_offset = 0, // :int
+	      frame_crop_bottom_offset = 0, // :int
+
+	      width,
+	      height;
+
+	      tag.dts = pts;
+	      tag.pts = pts;
+	      expGolomb = new ExpGolomb(this.getSps0Rbsp());
+
+	    // :int = expGolomb.readUnsignedByte(); // profile_idc u(8)
+	    profile_idc = expGolomb.readUnsignedByte();
+
+	    // constraint_set[0-5]_flag, u(1), reserved_zero_2bits u(2), level_idc u(8)
+	    expGolomb.skipBits(16);
+
+	    // seq_parameter_set_id
+	    expGolomb.skipUnsignedExpGolomb();
+
+	    if (profile_idc === 100 ||
+	        profile_idc === 110 ||
+	        profile_idc === 122 ||
+	        profile_idc === 244 ||
+	        profile_idc === 44 ||
+	        profile_idc === 83 ||
+	        profile_idc === 86 ||
+	        profile_idc === 118 ||
+	        profile_idc === 128) {
+	      chroma_format_idc = expGolomb.readUnsignedExpGolomb();
+	      if (3 === chroma_format_idc) {
+	        expGolomb.skipBits(1); // separate_colour_plane_flag
+	      }
+	      expGolomb.skipUnsignedExpGolomb(); // bit_depth_luma_minus8
+	      expGolomb.skipUnsignedExpGolomb(); // bit_depth_chroma_minus8
+	      expGolomb.skipBits(1); // qpprime_y_zero_transform_bypass_flag
+	      if (expGolomb.readBoolean()) { // seq_scaling_matrix_present_flag
+	        imax = (chroma_format_idc !== 3) ? 8 : 12;
+	        for (i = 0 ; i < imax ; ++i) {
+	          if (expGolomb.readBoolean()) { // seq_scaling_list_present_flag[ i ]
+	            if (i < 6) {
+	              this.scaling_list(16, expGolomb);
+	            } else {
+	              this.scaling_list(64, expGolomb);
+	            }
+	          }
+	        }
+	      }
+	    }
+
+	    expGolomb.skipUnsignedExpGolomb(); // log2_max_frame_num_minus4
+	    pic_order_cnt_type = expGolomb.readUnsignedExpGolomb();
+
+	    if ( 0 === pic_order_cnt_type ) {
+	      expGolomb.readUnsignedExpGolomb(); //log2_max_pic_order_cnt_lsb_minus4
+	    } else if ( 1 === pic_order_cnt_type ) {
+	      expGolomb.skipBits(1); // delta_pic_order_always_zero_flag
+	      expGolomb.skipExpGolomb(); // offset_for_non_ref_pic
+	      expGolomb.skipExpGolomb(); // offset_for_top_to_bottom_field
+	      num_ref_frames_in_pic_order_cnt_cycle = expGolomb.readUnsignedExpGolomb();
+	      for(i = 0 ; i < num_ref_frames_in_pic_order_cnt_cycle ; ++i) {
+	        expGolomb.skipExpGolomb(); // offset_for_ref_frame[ i ]
+	      }
+	    }
+
+	    expGolomb.skipUnsignedExpGolomb(); // max_num_ref_frames
+	    expGolomb.skipBits(1); // gaps_in_frame_num_value_allowed_flag
+	    pic_width_in_mbs_minus1 = expGolomb.readUnsignedExpGolomb();
+	    pic_height_in_map_units_minus1 = expGolomb.readUnsignedExpGolomb();
+
+	    frame_mbs_only_flag = expGolomb.readBits(1);
+	    if (0 === frame_mbs_only_flag) {
+	      expGolomb.skipBits(1); // mb_adaptive_frame_field_flag
+	    }
+
+	    expGolomb.skipBits(1); // direct_8x8_inference_flag
+	    frame_cropping_flag = expGolomb.readBoolean();
+	    if (frame_cropping_flag) {
+	      frame_crop_left_offset = expGolomb.readUnsignedExpGolomb();
+	      frame_crop_right_offset = expGolomb.readUnsignedExpGolomb();
+	      frame_crop_top_offset = expGolomb.readUnsignedExpGolomb();
+	      frame_crop_bottom_offset = expGolomb.readUnsignedExpGolomb();
+	    }
+
+	    width = ((pic_width_in_mbs_minus1 + 1) * 16) - frame_crop_left_offset * 2 - frame_crop_right_offset * 2;
+	    height = ((2 - frame_mbs_only_flag) * (pic_height_in_map_units_minus1 + 1) * 16) - (frame_crop_top_offset * 2) - (frame_crop_bottom_offset * 2);
+
+	    tag.writeMetaDataDouble("videocodecid", 7);
+	    tag.writeMetaDataDouble("width", width);
+	    tag.writeMetaDataDouble("height", height);
+	    // tag.writeMetaDataDouble("videodatarate", 0 );
+	    // tag.writeMetaDataDouble("framerate", 0);
+
+	    return tag;
+	  };
+
+	  // (pts:uint):FlvTag
+	  H264ExtraData.prototype.extraDataTag = function(pts) {
+	    var
+	      i,
+	      tag = new FlvTag(FlvTag.VIDEO_TAG, true);
+
+	    tag.dts = pts;
+	    tag.pts = pts;
+
+	    tag.writeByte(0x01);// version
+	    tag.writeByte(this.sps[0][1]);// profile
+	    tag.writeByte(this.sps[0][2]);// compatibility
+	    tag.writeByte(this.sps[0][3]);// level
+	    tag.writeByte(0xFC | 0x03); // reserved (6 bits), NULA length size - 1 (2 bits)
+	    tag.writeByte(0xE0 | 0x01 ); // reserved (3 bits), num of SPS (5 bits)
+	    tag.writeShort( this.sps[0].length ); // data of SPS
+	    tag.writeBytes( this.sps[0] ); // SPS
+
+	    tag.writeByte( this.pps.length ); // num of PPS (will there ever be more that 1 PPS?)
+	    for (i = 0 ; i < this.pps.length ; ++i) {
+	      tag.writeShort(this.pps[i].length); // 2 bytes for length of PPS
+	      tag.writeBytes(this.pps[i]); // data of PPS
+	    }
+
+	    return tag;
+	  };
+	})();
+
+	(function(window) {
+	  var
+	    FlvTag = window.videojs.Hls.FlvTag,
+	    H264ExtraData = window.videojs.Hls.H264ExtraData,
+	    H264Stream,
+	    NALUnitType;
+
+	  /**
+	   * Network Abstraction Layer (NAL) units are the packets of an H264
+	   * stream. NAL units are divided into types based on their payload
+	   * data. Each type has a unique numeric identifier.
+	   *
+	   *              NAL unit
+	   * |- NAL header -|------ RBSP ------|
+	   *
+	   * NAL unit: Network abstraction layer unit. The combination of a NAL
+	   * header and an RBSP.
+	   * NAL header: the encapsulation unit for transport-specific metadata in
+	   * an h264 stream. Exactly one byte.
+	   */
+	  // incomplete, see Table 7.1 of ITU-T H.264 for 12-32
+	  window.videojs.Hls.NALUnitType = NALUnitType = {
+	    unspecified: 0,
+	    slice_layer_without_partitioning_rbsp_non_idr: 1,
+	    slice_data_partition_a_layer_rbsp: 2,
+	    slice_data_partition_b_layer_rbsp: 3,
+	    slice_data_partition_c_layer_rbsp: 4,
+	    slice_layer_without_partitioning_rbsp_idr: 5,
+	    sei_rbsp: 6,
+	    seq_parameter_set_rbsp: 7,
+	    pic_parameter_set_rbsp: 8,
+	    access_unit_delimiter_rbsp: 9,
+	    end_of_seq_rbsp: 10,
+	    end_of_stream_rbsp: 11
+	  };
+
+	  window.videojs.Hls.H264Stream = H264Stream = function() {
+	    this._next_pts = 0; // :uint;
+	    this._next_dts = 0; // :uint;
+
+	    this._h264Frame = null; // :FlvTag
+
+	    this._oldExtraData = new H264ExtraData(); // :H264ExtraData
+	    this._newExtraData = new H264ExtraData(); // :H264ExtraData
+
+	    this._nalUnitType = -1; // :int
+
+	    this._state = 0; // :uint;
+
+	    this.tags = [];
+	  };
+
+	  //(pts:uint):void
+	  H264Stream.prototype.setTimeStampOffset = function() {};
+
+	  //(pts:uint, dts:uint, dataAligned:Boolean):void
+	  H264Stream.prototype.setNextTimeStamp = function(pts, dts, dataAligned) {
+	    // We could end up with a DTS less than 0 here. We need to deal with that!
+	    this._next_pts = pts;
+	    this._next_dts = dts;
+
+	    // If data is aligned, flush all internal buffers
+	    if (dataAligned) {
+	      this.finishFrame();
+	    }
+	  };
+
+	  H264Stream.prototype.finishFrame = function() {
+	    if (this._h264Frame) {
+	      // Push SPS before EVERY IDR frame for seeking
+	      if (this._newExtraData.extraDataExists()) {
+	        this._oldExtraData = this._newExtraData;
+	        this._newExtraData = new H264ExtraData();
+	      }
+
+	      // Check if keyframe and the length of tags.
+	      // This makes sure we write metadata on the first frame of a segment.
+	      if (this._oldExtraData.extraDataExists() &&
+	          (this._h264Frame.keyFrame || this.tags.length === 0)) {
+	        // Push extra data on every IDR frame in case we did a stream change + seek
+	        this.tags.push(this._oldExtraData.metaDataTag(this._h264Frame.pts));
+	        this.tags.push(this._oldExtraData.extraDataTag(this._h264Frame.pts));
+	      }
+
+	      this._h264Frame.endNalUnit();
+	      this.tags.push(this._h264Frame);
+
+	    }
+
+	    this._h264Frame = null;
+	    this._nalUnitType = -1;
+	    this._state = 0;
+	  };
+
+	  // (data:ByteArray, o:int, l:int):void
+	  H264Stream.prototype.writeBytes = function(data, offset, length) {
+	    var
+	      nalUnitSize, // :uint
+	      start, // :uint
+	      end, // :uint
+	      t; // :int
+
+	    // default argument values
+	    offset = offset || 0;
+	    length = length || 0;
+
+	    if (length <= 0) {
+	      // data is empty so there's nothing to write
+	      return;
+	    }
+
+	    // scan through the bytes until we find the start code (0x000001) for a
+	    // NAL unit and then begin writing it out
+	    // strip NAL start codes as we go
+	    switch (this._state) {
+	    default:
+	      /* falls through */
+	    case 0:
+	      this._state = 1;
+	      /* falls through */
+	    case 1:
+	      // A NAL unit may be split across two TS packets. Look back a bit to
+	      // make sure the prefix of the start code wasn't already written out.
+	      if (data[offset] <= 1) {
+	        nalUnitSize = this._h264Frame ? this._h264Frame.nalUnitSize() : 0;
+	        if (nalUnitSize >= 1 && this._h264Frame.negIndex(1) === 0) {
+	          // ?? ?? 00 | O[01] ?? ??
+	          if (data[offset] === 1 &&
+	              nalUnitSize >= 2 &&
+	              this._h264Frame.negIndex(2) === 0) {
+	            // ?? 00 00 : 01
+	            if (3 <= nalUnitSize && 0 === this._h264Frame.negIndex(3)) {
+	              this._h264Frame.length -= 3; // 00 00 00 : 01
+	            } else {
+	              this._h264Frame.length -= 2; // 00 00 : 01
+	            }
+
+	            this._state = 3;
+	            return this.writeBytes(data, offset + 1, length - 1);
+	          }
+
+	          if (length > 1 && data[offset] === 0 && data[offset + 1] === 1) {
+	            // ?? 00 | 00 01
+	            if (nalUnitSize >= 2 && this._h264Frame.negIndex(2) === 0) {
+	              this._h264Frame.length -= 2; // 00 00 : 00 01
+	            } else {
+	              this._h264Frame.length -= 1; // 00 : 00 01
+	            }
+
+	            this._state = 3;
+	            return this.writeBytes(data, offset + 2, length - 2);
+	          }
+
+	          if (length > 2 &&
+	              data[offset] === 0 &&
+	              data[offset + 1] === 0 &&
+	              data[offset + 2] === 1) {
+	            // 00 : 00 00 01
+	            // this._h264Frame.length -= 1;
+	            this._state = 3;
+	            return this.writeBytes(data, offset + 3, length - 3);
+	          }
+	        }
+	      }
+	      // allow fall through if the above fails, we may end up checking a few
+	      // bytes a second time. But that case will be VERY rare
+	      this._state = 2;
+	      /* falls through */
+	    case 2:
+	      // Look for start codes in the data from the current offset forward
+	      start = offset;
+	      end = start + length;
+	      for (t = end - 3; offset < t;) {
+	        if (data[offset + 2] > 1) {
+	          // if data[offset + 2] is greater than 1, there is no way a start
+	          // code can begin before offset + 3
+	          offset += 3;
+	        } else if (data[offset + 1] !== 0) {
+	            offset += 2;
+	        } else if (data[offset] !== 0) {
+	            offset += 1;
+	        } else {
+	          // If we get here we have 00 00 00 or 00 00 01
+	          if (data[offset + 2] === 1) {
+	            if (offset > start) {
+	              this._h264Frame.writeBytes(data, start, offset - start);
+	            }
+	            this._state = 3;
+	            offset += 3;
+	            return this.writeBytes(data, offset, end - offset);
+	          }
+
+	          if (end - offset >= 4 &&
+	              data[offset + 2] === 0 &&
+	              data[offset + 3] === 1) {
+	            if (offset > start) {
+	              this._h264Frame.writeBytes(data, start, offset - start);
+	            }
+	            this._state = 3;
+	            offset += 4;
+	            return this.writeBytes(data, offset, end - offset);
+	          }
+
+	          // We are at the end of the buffer, or we have 3 NULLS followed by
+	          // something that is not a 1, either way we can step forward by at
+	          // least 3
+	          offset += 3;
+	        }
+	      }
+
+	      // We did not find any start codes. Try again next packet
+	      this._state = 1;
+	      if (this._h264Frame) {
+	        this._h264Frame.writeBytes(data, start, length);
+	      }
+	      return;
+	    case 3:
+	      // The next byte is the first byte of a NAL Unit
+
+	      if (this._h264Frame) {
+	        // we've come to a new NAL unit so finish up the one we've been
+	        // working on
+
+	        switch (this._nalUnitType) {
+	        case NALUnitType.seq_parameter_set_rbsp:
+	          this._h264Frame.endNalUnit(this._newExtraData.sps);
+	          break;
+	        case NALUnitType.pic_parameter_set_rbsp:
+	          this._h264Frame.endNalUnit(this._newExtraData.pps);
+	          break;
+	        case NALUnitType.slice_layer_without_partitioning_rbsp_idr:
+	          this._h264Frame.endNalUnit();
+	          break;
+	        default:
+	          this._h264Frame.endNalUnit();
+	          break;
+	        }
+	      }
+
+	      // setup to begin processing the new NAL unit
+	      this._nalUnitType = data[offset] & 0x1F;
+	      if (this._h264Frame) {
+	          if (this._nalUnitType === NALUnitType.access_unit_delimiter_rbsp) {
+	            // starting a new access unit, flush the previous one
+	            this.finishFrame();
+	          } else if (this._nalUnitType === NALUnitType.slice_layer_without_partitioning_rbsp_idr) {
+	            this._h264Frame.keyFrame = true;
+	          }
+	      }
+
+	      // finishFrame may render this._h264Frame null, so we must test again
+	      if (!this._h264Frame) {
+	        this._h264Frame = new FlvTag(FlvTag.VIDEO_TAG);
+	        this._h264Frame.pts = this._next_pts;
+	        this._h264Frame.dts = this._next_dts;
+	      }
+
+	      this._h264Frame.startNalUnit();
+	      // We know there will not be an overlapping start code, so we can skip
+	      // that test
+	      this._state = 2;
+	      return this.writeBytes(data, offset, length);
+	    } // switch
+	  };
+	})(this);
+
+	(function(window) {
+	var
+	  FlvTag = window.videojs.Hls.FlvTag,
+	  adtsSampleingRates = [
+	    96000, 88200,
+	    64000, 48000,
+	    44100, 32000,
+	    24000, 22050,
+	    16000, 12000
+	  ];
+
+	window.videojs.Hls.AacStream = function() {
+	  var
+	    next_pts, // :uint
+	    state, // :uint
+	    pes_length, // :int
+	    lastMetaPts,
+
+	    adtsProtectionAbsent, // :Boolean
+	    adtsObjectType, // :int
+	    adtsSampleingIndex, // :int
+	    adtsChanelConfig, // :int
+	    adtsFrameSize, // :int
+	    adtsSampleCount, // :int
+	    adtsDuration, // :int
+
+	    aacFrame, // :FlvTag = null;
+	    extraData; // :uint;
+
+	  this.tags = [];
+
+	  // (pts:uint):void
+	  this.setTimeStampOffset = function(pts) {
+
+	    // keep track of the last time a metadata tag was written out
+	    // set the initial value so metadata will be generated before any
+	    // payload data
+	    lastMetaPts = pts - 1000;
+	  };
+
+	  // (pts:uint, pes_size:int, dataAligned:Boolean):void
+	  this.setNextTimeStamp = function(pts, pes_size, dataAligned) {
+	    next_pts = pts;
+	    pes_length = pes_size;
+
+	    // If data is aligned, flush all internal buffers
+	    if (dataAligned) {
+	      state = 0;
+	    }
+	  };
+
+	  // (data:ByteArray, o:int = 0, l:int = 0):void
+	  this.writeBytes = function(data, offset, length) {
+	    var
+	      end, // :int
+	      newExtraData, // :uint
+	      bytesToCopy; // :int
+
+	    // default arguments
+	    offset = offset || 0;
+	    length = length || 0;
+
+	    // Do not allow more than 'pes_length' bytes to be written
+	    length = (pes_length < length ? pes_length : length);
+	    pes_length -= length;
+	    end = offset + length;
+	    while (offset < end) {
+	      switch (state) {
+	      default:
+	        state = 0;
+	        break;
+	      case 0:
+	        if (offset >= end) {
+	          return;
+	        }
+	        if (0xFF !== data[offset]) {
+	          console.assert(false, 'Error no ATDS header found');
+	          offset += 1;
+	          state = 0;
+	          return;
+	        }
+
+	        offset += 1;
+	        state = 1;
+	        break;
+	      case 1:
+	        if (offset >= end) {
+	          return;
+	        }
+	        if (0xF0 !== (data[offset] & 0xF0)) {
+	          console.assert(false, 'Error no ATDS header found');
+	          offset +=1;
+	          state = 0;
+	          return;
+	        }
+
+	        adtsProtectionAbsent = !!(data[offset] & 0x01);
+
+	        offset += 1;
+	        state = 2;
+	        break;
+	      case 2:
+	        if (offset >= end) {
+	          return;
+	        }
+	        adtsObjectType = ((data[offset] & 0xC0) >>> 6) + 1;
+	        adtsSampleingIndex = ((data[offset] & 0x3C) >>> 2);
+	        adtsChanelConfig = ((data[offset] & 0x01) << 2);
+
+	        offset += 1;
+	        state = 3;
+	        break;
+	      case 3:
+	        if (offset >= end) {
+	          return;
+	        }
+	        adtsChanelConfig |= ((data[offset] & 0xC0) >>> 6);
+	        adtsFrameSize = ((data[offset] & 0x03) << 11);
+
+	        offset += 1;
+	        state = 4;
+	        break;
+	      case 4:
+	        if (offset >= end) {
+	          return;
+	        }
+	        adtsFrameSize |= (data[offset] << 3);
+
+	        offset += 1;
+	        state = 5;
+	        break;
+	      case 5:
+	        if(offset >= end) {
+	          return;
+	        }
+	        adtsFrameSize |= ((data[offset] & 0xE0) >>> 5);
+	        adtsFrameSize -= (adtsProtectionAbsent ? 7 : 9);
+
+	        offset += 1;
+	        state = 6;
+	        break;
+	      case 6:
+	        if (offset >= end) {
+	          return;
+	        }
+	        adtsSampleCount = ((data[offset] & 0x03) + 1) * 1024;
+	        adtsDuration = (adtsSampleCount * 1000) / adtsSampleingRates[adtsSampleingIndex];
+
+	        newExtraData = (adtsObjectType << 11) |
+	                       (adtsSampleingIndex << 7) |
+	                       (adtsChanelConfig << 3);
+
+	        // write out metadata tags every 1 second so that the decoder
+	        // is re-initialized quickly after seeking into a different
+	        // audio configuration
+	        if (newExtraData !== extraData || next_pts - lastMetaPts >= 1000) {
+	          aacFrame = new FlvTag(FlvTag.METADATA_TAG);
+	          aacFrame.pts = next_pts;
+	          aacFrame.dts = next_pts;
+
+	          // AAC is always 10
+	          aacFrame.writeMetaDataDouble("audiocodecid", 10);
+	          aacFrame.writeMetaDataBoolean("stereo", 2 === adtsChanelConfig);
+	          aacFrame.writeMetaDataDouble ("audiosamplerate", adtsSampleingRates[adtsSampleingIndex]);
+	          // Is AAC always 16 bit?
+	          aacFrame.writeMetaDataDouble ("audiosamplesize", 16);
+
+	          this.tags.push(aacFrame);
+
+	          extraData = newExtraData;
+	          aacFrame = new FlvTag(FlvTag.AUDIO_TAG, true);
+	          // For audio, DTS is always the same as PTS. We want to set the DTS
+	          // however so we can compare with video DTS to determine approximate
+	          // packet order
+	          aacFrame.pts = next_pts;
+	          aacFrame.dts = aacFrame.pts;
+
+	          aacFrame.view.setUint16(aacFrame.position, newExtraData);
+	          aacFrame.position += 2;
+	          aacFrame.length = Math.max(aacFrame.length, aacFrame.position);
+
+	          this.tags.push(aacFrame);
+
+	          lastMetaPts = next_pts;
+	        }
+
+	        // Skip the checksum if there is one
+	        offset += 1;
+	        state = 7;
+	        break;
+	      case 7:
+	        if (!adtsProtectionAbsent) {
+	          if (2 > (end - offset)) {
+	            return;
+	          } else {
+	            offset += 2;
+	          }
+	        }
+
+	        aacFrame = new FlvTag(FlvTag.AUDIO_TAG);
+	        aacFrame.pts = next_pts;
+	        aacFrame.dts = next_pts;
+	        state = 8;
+	        break;
+	      case 8:
+	        while (adtsFrameSize) {
+	          if (offset >= end) {
+	            return;
+	          }
+	          bytesToCopy = (end - offset) < adtsFrameSize ? (end - offset) : adtsFrameSize;
+	          aacFrame.writeBytes(data, offset, bytesToCopy);
+	          offset += bytesToCopy;
+	          adtsFrameSize -= bytesToCopy;
+	        }
+
+	        this.tags.push(aacFrame);
+
+	        // finished with this frame
+	        state = 0;
+	        next_pts += adtsDuration;
+	      }
+	    }
+	  };
+	};
+
+	})(this);
+
+	(function(window, videojs, undefined) {
+	  'use strict';
+	  var
+	    // return a percent-encoded representation of the specified byte range
+	    // @see http://en.wikipedia.org/wiki/Percent-encoding
+	    percentEncode = function(bytes, start, end) {
+	      var i, result = '';
+	      for (i = start; i < end; i++) {
+	        result += '%' + ('00' + bytes[i].toString(16)).slice(-2);
+	      }
+	      return result;
+	    },
+	    // return the string representation of the specified byte range,
+	    // interpreted as UTf-8.
+	    parseUtf8 = function(bytes, start, end) {
+	      return window.decodeURIComponent(percentEncode(bytes, start, end));
+	    },
+	    // return the string representation of the specified byte range,
+	    // interpreted as ISO-8859-1.
+	    parseIso88591 = function(bytes, start, end) {
+	      return window.unescape(percentEncode(bytes, start, end));
+	    },
+	    tagParsers = {
+	      'TXXX': function(tag) {
+	        var i;
+	        if (tag.data[0] !== 3) {
+	          // ignore frames with unrecognized character encodings
+	          return;
+	        }
+
+	        for (i = 1; i < tag.data.length; i++) {
+	          if (tag.data[i] === 0) {
+	            // parse the text fields
+	            tag.description = parseUtf8(tag.data, 1, i);
+	            // do not include the null terminator in the tag value
+	            tag.value = parseUtf8(tag.data, i + 1, tag.data.length - 1);
+	            break;
+	          }
+	        }
+	      },
+	      'WXXX': function(tag) {
+	        var i;
+	        if (tag.data[0] !== 3) {
+	          // ignore frames with unrecognized character encodings
+	          return;
+	        }
+
+	        for (i = 1; i < tag.data.length; i++) {
+	          if (tag.data[i] === 0) {
+	            // parse the description and URL fields
+	            tag.description = parseUtf8(tag.data, 1, i);
+	            tag.url = parseUtf8(tag.data, i + 1, tag.data.length);
+	            break;
+	          }
+	        }
+	      },
+	      'PRIV': function(tag) {
+	        var i;
+
+	        for (i = 0; i < tag.data.length; i++) {
+	          if (tag.data[i] === 0) {
+	            // parse the description and URL fields
+	            tag.owner = parseIso88591(tag.data, 0, i);
+	            break;
+	          }
+	        }
+	        tag.privateData = tag.data.subarray(i + 1);
+	      }
+	    },
+	    MetadataStream;
+
+	  MetadataStream = function(options) {
+	    var
+	      settings = {
+	        debug: !!(options && options.debug),
+
+	        // the bytes of the program-level descriptor field in MP2T
+	        // see ISO/IEC 13818-1:2013 (E), section 2.6 "Program and
+	        // program element descriptors"
+	        descriptor: options && options.descriptor
+	      },
+	      // the total size in bytes of the ID3 tag being parsed
+	      tagSize = 0,
+	      // tag data that is not complete enough to be parsed
+	      buffer = [],
+	      // the total number of bytes currently in the buffer
+	      bufferSize = 0,
+	      i;
+
+	    MetadataStream.prototype.init.call(this);
+
+	    // calculate the text track in-band metadata track dispatch type
+	    // https://html.spec.whatwg.org/multipage/embedded-content.html#steps-to-expose-a-media-resource-specific-text-track
+	    this.dispatchType = videojs.Hls.SegmentParser.STREAM_TYPES.metadata.toString(16);
+	    if (settings.descriptor) {
+	      for (i = 0; i < settings.descriptor.length; i++) {
+	        this.dispatchType += ('00' + settings.descriptor[i].toString(16)).slice(-2);
+	      }
+	    }
+
+	    this.push = function(chunk) {
+	      var tag, frameStart, frameSize, frame, i;
+
+	      // ignore events that don't look like ID3 data
+	      if (buffer.length === 0 &&
+	          (chunk.data.length < 10 ||
+	           chunk.data[0] !== 'I'.charCodeAt(0) ||
+	           chunk.data[1] !== 'D'.charCodeAt(0) ||
+	           chunk.data[2] !== '3'.charCodeAt(0))) {
+	        if (settings.debug) {
+	          videojs.log('Skipping unrecognized metadata packet');
+	        }
+	        return;
+	      }
+
+	      // add this chunk to the data we've collected so far
+	      buffer.push(chunk);
+	      bufferSize += chunk.data.byteLength;
+
+	      // grab the size of the entire frame from the ID3 header
+	      if (buffer.length === 1) {
+	        // the frame size is transmitted as a 28-bit integer in the
+	        // last four bytes of the ID3 header.
+	        // The most significant bit of each byte is dropped and the
+	        // results concatenated to recover the actual value.
+	        tagSize = (chunk.data[6] << 21) |
+	                  (chunk.data[7] << 14) |
+	                  (chunk.data[8] << 7) |
+	                  (chunk.data[9]);
+
+	        // ID3 reports the tag size excluding the header but it's more
+	        // convenient for our comparisons to include it
+	        tagSize += 10;
+	      }
+
+	      // if the entire frame has not arrived, wait for more data
+	      if (bufferSize < tagSize) {
+	        return;
+	      }
+
+	      // collect the entire frame so it can be parsed
+	      tag = {
+	        data: new Uint8Array(tagSize),
+	        frames: [],
+	        pts: buffer[0].pts,
+	        dts: buffer[0].dts
+	      };
+	      for (i = 0; i < tagSize;) {
+	        tag.data.set(buffer[0].data, i);
+	        i += buffer[0].data.byteLength;
+	        bufferSize -= buffer[0].data.byteLength;
+	        buffer.shift();
+	      }
+
+	      // find the start of the first frame and the end of the tag
+	      frameStart = 10;
+	      if (tag.data[5] & 0x40) {
+	        // advance the frame start past the extended header
+	        frameStart += 4; // header size field
+	        frameStart += (tag.data[10] << 24) |
+	                      (tag.data[11] << 16) |
+	                      (tag.data[12] << 8)  |
+	                      (tag.data[13]);
+
+	        // clip any padding off the end
+	        tagSize -= (tag.data[16] << 24) |
+	                   (tag.data[17] << 16) |
+	                   (tag.data[18] << 8)  |
+	                   (tag.data[19]);
+	      }
+
+	      // parse one or more ID3 frames
+	      // http://id3.org/id3v2.3.0#ID3v2_frame_overview
+	      do {
+	        // determine the number of bytes in this frame
+	        frameSize = (tag.data[frameStart + 4] << 24) |
+	                    (tag.data[frameStart + 5] << 16) |
+	                    (tag.data[frameStart + 6] <<  8) |
+	                    (tag.data[frameStart + 7]);
+	        if (frameSize < 1) {
+	          return videojs.log('Malformed ID3 frame encountered. Skipping metadata parsing.');
+	        }
+
+	        frame = {
+	          id: String.fromCharCode(tag.data[frameStart],
+	                                  tag.data[frameStart + 1],
+	                                  tag.data[frameStart + 2],
+	                                  tag.data[frameStart + 3]),
+	          data: tag.data.subarray(frameStart + 10, frameStart + frameSize + 10)
+	        };
+	        if (tagParsers[frame.id]) {
+	          tagParsers[frame.id](frame);
+	        }
+	        tag.frames.push(frame);
+
+	        frameStart += 10; // advance past the frame header
+	        frameStart += frameSize; // advance past the frame body
+	      } while (frameStart < tagSize);
+	      this.trigger('data', tag);
+	    };
+	  };
+	  MetadataStream.prototype = new videojs.Hls.Stream();
+
+	  videojs.Hls.MetadataStream = MetadataStream;
+	})(window, __webpack_provided_window_dot_videojs);
+
+	(function(window) {
+	  var
+	    videojs = __webpack_provided_window_dot_videojs,
+	    FlvTag = videojs.Hls.FlvTag,
+	    H264Stream = videojs.Hls.H264Stream,
+	    AacStream = videojs.Hls.AacStream,
+	    MetadataStream = videojs.Hls.MetadataStream,
+	    MP2T_PACKET_LENGTH,
+	    STREAM_TYPES;
+
+	  /**
+	   * An object that incrementally transmuxes MPEG2 Trasport Stream
+	   * chunks into an FLV.
+	   */
+	  videojs.Hls.SegmentParser = function() {
+	    var
+	      self = this,
+	      parseTSPacket,
+	      streamBuffer = new Uint8Array(MP2T_PACKET_LENGTH),
+	      streamBufferByteCount = 0,
+	      h264Stream = new H264Stream(),
+	      aacStream = new AacStream();
+
+	    // expose the stream metadata
+	    self.stream = {
+	      // the mapping between transport stream programs and the PIDs
+	      // that form their elementary streams
+	      programMapTable: {}
+	    };
+
+	    // allow in-band metadata to be observed
+	    self.metadataStream = new MetadataStream();
+
+	    this.mediaTimelineOffset = null;
+
+	    // The first timestamp value encountered during parsing. This
+	    // value can be used to determine the relative timing between
+	    // frames and the start of the current timestamp sequence. It
+	    // should be reset to null before parsing a segment with
+	    // discontinuous timestamp values from previous segments.
+	    self.timestampOffset = null;
+
+	    // For information on the FLV format, see
+	    // http://download.macromedia.com/f4v/video_file_format_spec_v10_1.pdf.
+	    // Technically, this function returns the header and a metadata FLV tag
+	    // if duration is greater than zero
+	    // duration in seconds
+	    // @return {object} the bytes of the FLV header as a Uint8Array
+	    self.getFlvHeader = function(duration, audio, video) { // :ByteArray {
+	      var
+	        headBytes = new Uint8Array(3 + 1 + 1 + 4),
+	        head = new DataView(headBytes.buffer),
+	        metadata,
+	        result,
+	        metadataLength;
+
+	      // default arguments
+	      duration = duration || 0;
+	      audio = audio === undefined? true : audio;
+	      video = video === undefined? true : video;
+
+	      // signature
+	      head.setUint8(0, 0x46); // 'F'
+	      head.setUint8(1, 0x4c); // 'L'
+	      head.setUint8(2, 0x56); // 'V'
+
+	      // version
+	      head.setUint8(3, 0x01);
+
+	      // flags
+	      head.setUint8(4, (audio ? 0x04 : 0x00) | (video ? 0x01 : 0x00));
+
+	      // data offset, should be 9 for FLV v1
+	      head.setUint32(5, headBytes.byteLength);
+
+	      // init the first FLV tag
+	      if (duration <= 0) {
+	        // no duration available so just write the first field of the first
+	        // FLV tag
+	        result = new Uint8Array(headBytes.byteLength + 4);
+	        result.set(headBytes);
+	        result.set([0, 0, 0, 0], headBytes.byteLength);
+	        return result;
+	      }
+
+	      // write out the duration metadata tag
+	      metadata = new FlvTag(FlvTag.METADATA_TAG);
+	      metadata.pts = metadata.dts = 0;
+	      metadata.writeMetaDataDouble("duration", duration);
+	      metadataLength = metadata.finalize().length;
+	      result = new Uint8Array(headBytes.byteLength + metadataLength);
+	      result.set(headBytes);
+	      result.set(head.byteLength, metadataLength);
+
+	      return result;
+	    };
+
+	    self.flushTags = function() {
+	      h264Stream.finishFrame();
+	    };
+
+	    /**
+	     * Returns whether a call to `getNextTag()` will be successful.
+	     * @return {boolean} whether there is at least one transmuxed FLV
+	     * tag ready
+	     */
+	    self.tagsAvailable = function() { // :int {
+	      return h264Stream.tags.length + aacStream.tags.length;
+	    };
+
+	    /**
+	     * Returns the next tag in decoder-timestamp (DTS) order.
+	     * @returns {object} the next tag to decoded.
+	     */
+	    self.getNextTag = function() {
+	      var tag;
+
+	      if (!h264Stream.tags.length) {
+	        // only audio tags remain
+	        tag = aacStream.tags.shift();
+	      } else if (!aacStream.tags.length) {
+	        // only video tags remain
+	        tag = h264Stream.tags.shift();
+	      } else if (aacStream.tags[0].dts < h264Stream.tags[0].dts) {
+	        // audio should be decoded next
+	        tag = aacStream.tags.shift();
+	      } else {
+	        // video should be decoded next
+	        tag = h264Stream.tags.shift();
+	      }
+
+	      return tag.finalize();
+	    };
+
+	    self.parseSegmentBinaryData = function(data) { // :ByteArray) {
+	      var
+	        dataPosition = 0,
+	        dataSlice;
+
+	      // To avoid an extra copy, we will stash overflow data, and only
+	      // reconstruct the first packet. The rest of the packets will be
+	      // parsed directly from data
+	      if (streamBufferByteCount > 0) {
+	        if (data.byteLength + streamBufferByteCount < MP2T_PACKET_LENGTH) {
+	          // the current data is less than a single m2ts packet, so stash it
+	          // until we receive more
+
+	          // ?? this seems to append streamBuffer onto data and then just give up. I'm not sure why that would be interesting.
+	          videojs.log('data.length + streamBuffer.length < MP2T_PACKET_LENGTH ??');
+	          streamBuffer.readBytes(data, data.length, streamBuffer.length);
+	          return;
+	        } else {
+	          // we have enough data for an m2ts packet
+	          // process it immediately
+	          dataSlice = data.subarray(0, MP2T_PACKET_LENGTH - streamBufferByteCount);
+	          streamBuffer.set(dataSlice, streamBufferByteCount);
+
+	          parseTSPacket(streamBuffer);
+
+	          // reset the buffer
+	          streamBuffer = new Uint8Array(MP2T_PACKET_LENGTH);
+	          streamBufferByteCount = 0;
+	        }
+	      }
+
+	      while (true) {
+	        // Make sure we are TS aligned
+	        while(dataPosition < data.byteLength  && data[dataPosition] !== 0x47) {
+	          // If there is no sync byte skip forward until we find one
+	          // TODO if we find a sync byte, look 188 bytes in the future (if
+	          // possible). If there is not a sync byte there, keep looking
+	          dataPosition++;
+	        }
+
+	        // base case: not enough data to parse a m2ts packet
+	        if (data.byteLength - dataPosition < MP2T_PACKET_LENGTH) {
+	          if (data.byteLength - dataPosition > 0) {
+	            // there are bytes remaining, save them for next time
+	            streamBuffer.set(data.subarray(dataPosition),
+	                             streamBufferByteCount);
+	            streamBufferByteCount += data.byteLength - dataPosition;
+	          }
+	          return;
+	        }
+
+	        // attempt to parse a m2ts packet
+	        if (parseTSPacket(data.subarray(dataPosition, dataPosition + MP2T_PACKET_LENGTH))) {
+	          dataPosition += MP2T_PACKET_LENGTH;
+	        } else {
+	          // If there was an error parsing a TS packet. it could be
+	          // because we are not TS packet aligned. Step one forward by
+	          // one byte and allow the code above to find the next
+	          videojs.log('error parsing m2ts packet, attempting to re-align');
+	          dataPosition++;
+	        }
+	      }
+	    };
+
+	    /**
+	     * Parses a video/mp2t packet and appends the underlying video and
+	     * audio data onto h264stream and aacStream, respectively.
+	     * @param data {Uint8Array} the bytes of an MPEG2-TS packet,
+	     * including the sync byte.
+	     * @return {boolean} whether a valid packet was encountered
+	     */
+	    // TODO add more testing to make sure we dont walk past the end of a TS
+	    // packet!
+	    parseTSPacket = function(data) { // :ByteArray):Boolean {
+	      var
+	        offset = 0, // :uint
+	        end = offset + MP2T_PACKET_LENGTH, // :uint
+
+	        // Payload Unit Start Indicator
+	        pusi = !!(data[offset + 1] & 0x40), // mask: 0100 0000
+
+	        // packet identifier (PID), a unique identifier for the elementary
+	        // stream this packet describes
+	        pid = (data[offset + 1] & 0x1F) << 8 | data[offset + 2], // mask: 0001 1111
+
+	        // adaptation_field_control, whether this header is followed by an
+	        // adaptation field, a payload, or both
+	        afflag = (data[offset + 3] & 0x30 ) >>> 4,
+
+	        patTableId, // :int
+	        patCurrentNextIndicator, // Boolean
+	        patSectionLength, // :uint
+	        programNumber, // :uint
+	        programPid, // :uint
+	        patEntriesEnd, // :uint
+
+	        pesPacketSize, // :int,
+	        dataAlignmentIndicator, // :Boolean,
+	        ptsDtsIndicator, // :int
+	        pesHeaderLength, // :int
+
+	        pts, // :uint
+	        dts, // :uint
+
+	        pmtCurrentNextIndicator, // :Boolean
+	        pmtProgramDescriptorsLength,
+	        pmtSectionLength, // :uint
+
+	        streamType, // :int
+	        elementaryPID, // :int
+	        ESInfolength; // :int
+
+	      // Continuity Counter we could use this for sanity check, and
+	      // corrupt stream detection
+	      // cc = (data[offset + 3] & 0x0F);
+
+	      // move past the header
+	      offset += 4;
+
+	      // if an adaption field is present, its length is specified by
+	      // the fifth byte of the PES header. The adaptation field is
+	      // used to specify some forms of timing and control data that we
+	      // do not currently use.
+	      if (afflag > 0x01) {
+	        offset += data[offset] + 1;
+	      }
+
+	      // Handle a Program Association Table (PAT). PATs map PIDs to
+	      // individual programs. If this transport stream was being used
+	      // for television broadcast, a program would probably be
+	      // equivalent to a channel. In HLS, it would be very unusual to
+	      // create an mp2t stream with multiple programs.
+	      if (0x0000 === pid) {
+	        // The PAT may be split into multiple sections and those
+	        // sections may be split into multiple packets. If a PAT
+	        // section starts in this packet, PUSI will be true and the
+	        // first byte of the playload will indicate the offset from
+	        // the current position to the start of the section.
+	        if (pusi) {
+	          offset += 1 + data[offset];
+	        }
+	        patTableId = data[offset];
+
+	        if (patTableId !== 0x00) {
+	          videojs.log('the table_id of the PAT should be 0x00 but was' +
+	                      patTableId.toString(16));
+	        }
+
+	        // the current_next_indicator specifies whether this PAT is
+	        // currently applicable or is part of the next table to become
+	        // active
+	        patCurrentNextIndicator = !!(data[offset + 5] & 0x01);
+	        if (patCurrentNextIndicator) {
+	          // section_length specifies the number of bytes following
+	          // its position to the end of this section
+	          // section_length = rest of header + (n * entry length) + CRC
+	          // = 5 + (n * 4) + 4
+	          patSectionLength =  (data[offset + 1] & 0x0F) << 8 | data[offset + 2];
+	          // move past the rest of the PSI header to the first program
+	          // map table entry
+	          offset += 8;
+
+	          // we don't handle streams with more than one program, so
+	          // raise an exception if we encounter one
+	          patEntriesEnd = offset + (patSectionLength - 5 - 4);
+	          for (; offset < patEntriesEnd; offset += 4) {
+	            programNumber = (data[offset] << 8 | data[offset + 1]);
+	            programPid = (data[offset + 2] & 0x1F) << 8 | data[offset + 3];
+	            // network PID program number equals 0
+	            // this is primarily an artifact of EBU DVB and can be ignored
+	            if (programNumber === 0) {
+	              self.stream.networkPid = programPid;
+	            } else if (self.stream.pmtPid === undefined) {
+	              // the Program Map Table (PMT) associates the underlying
+	              // video and audio streams with a unique PID
+	              self.stream.pmtPid = programPid;
+	            } else if (self.stream.pmtPid !== programPid) {
+	              throw new Error("TS has more that 1 program");
+	            }
+	          }
+	        }
+	      } else if (pid === self.stream.programMapTable[STREAM_TYPES.h264] ||
+	                 pid === self.stream.programMapTable[STREAM_TYPES.adts] ||
+	                 pid === self.stream.programMapTable[STREAM_TYPES.metadata]) {
+	        if (pusi) {
+	          // comment out for speed
+	          if (0x00 !== data[offset + 0] || 0x00 !== data[offset + 1] || 0x01 !== data[offset + 2]) {
+	            // look for PES start code
+	             throw new Error("PES did not begin with start code");
+	           }
+
+	          // var sid:int  = data[offset+3]; // StreamID
+	          pesPacketSize = (data[offset + 4] << 8) | data[offset + 5];
+	          dataAlignmentIndicator = (data[offset + 6] & 0x04) !== 0;
+	          ptsDtsIndicator = data[offset + 7];
+	          pesHeaderLength = data[offset + 8]; // TODO sanity check header length
+	          offset += 9; // Skip past PES header
+
+	          // PTS and DTS are normially stored as a 33 bit number.
+	          // JavaScript does not have a integer type larger than 32 bit
+	          // BUT, we need to convert from 90ns to 1ms time scale anyway.
+	          // so what we are going to do instead, is drop the least
+	          // significant bit (the same as dividing by two) then we can
+	          // divide by 45 (45 * 2 = 90) to get ms.
+	          if (ptsDtsIndicator & 0xC0) {
+	            // the PTS and DTS are not written out directly. For information on
+	            // how they are encoded, see
+	            // http://dvd.sourceforge.net/dvdinfo/pes-hdr.html
+	            pts = (data[offset + 0] & 0x0E) << 28
+	              | (data[offset + 1] & 0xFF) << 21
+	              | (data[offset + 2] & 0xFE) << 13
+	              | (data[offset + 3] & 0xFF) <<  6
+	              | (data[offset + 4] & 0xFE) >>>  2;
+	            pts /= 45;
+	            dts = pts;
+	            if (ptsDtsIndicator & 0x40) {// DTS
+	              dts = (data[offset + 5] & 0x0E ) << 28
+	                | (data[offset + 6] & 0xFF ) << 21
+	                | (data[offset + 7] & 0xFE ) << 13
+	                | (data[offset + 8] & 0xFF ) << 6
+	                | (data[offset + 9] & 0xFE ) >>> 2;
+	              dts /= 45;
+	            }
+	          }
+
+	          // Skip past "optional" portion of PTS header
+	          offset += pesHeaderLength;
+
+	          // keep track of the earliest encounted PTS value so
+	          // external parties can align timestamps across
+	          // discontinuities
+	          if (self.timestampOffset === null) {
+	            self.timestampOffset = pts;
+	          }
+
+	          if (pid === self.stream.programMapTable[STREAM_TYPES.h264]) {
+	            h264Stream.setNextTimeStamp(pts,
+	                                        dts,
+	                                        dataAlignmentIndicator);
+	          } else if (pid === self.stream.programMapTable[STREAM_TYPES.adts]) {
+	            aacStream.setNextTimeStamp(pts,
+	                                       pesPacketSize,
+	                                       dataAlignmentIndicator);
+	          }
+	        }
+
+	        if (pid === self.stream.programMapTable[STREAM_TYPES.adts]) {
+	          aacStream.writeBytes(data, offset, end - offset);
+	        } else if (pid === self.stream.programMapTable[STREAM_TYPES.h264]) {
+	          h264Stream.writeBytes(data, offset, end - offset);
+	        } else if (pid === self.stream.programMapTable[STREAM_TYPES.metadata]) {
+	          self.metadataStream.push({
+	            pts: pts,
+	            dts: dts,
+	            data: data.subarray(offset)
+	          });
+	        }
+	      } else if (self.stream.pmtPid === pid) {
+	        // similarly to the PAT, jump to the first byte of the section
+	        if (pusi) {
+	          offset += 1 + data[offset];
+	        }
+	        if (data[offset] !== 0x02) {
+	          videojs.log('The table_id of a PMT should be 0x02 but was ' +
+	                      data[offset].toString(16));
+	        }
+
+	        // whether this PMT is currently applicable or is part of the
+	        // next table to become active
+	        pmtCurrentNextIndicator = !!(data[offset + 5] & 0x01);
+	        if (pmtCurrentNextIndicator) {
+	          // overwrite any existing program map table
+	          self.stream.programMapTable = {};
+	          // section_length specifies the number of bytes following
+	          // its position to the end of this section
+	          pmtSectionLength  = (data[offset + 1] & 0x0f) << 8 | data[offset + 2];
+	          // subtract the length of the program info descriptors
+	          pmtProgramDescriptorsLength = (data[offset + 10] & 0x0f) << 8 | data[offset + 11];
+	          pmtSectionLength -= pmtProgramDescriptorsLength;
+	          // skip CRC and PSI data we dont care about
+	          // rest of header + CRC = 9 + 4
+	          pmtSectionLength -= 13;
+
+	          // capture the PID of PCR packets so we can ignore them if we see any
+	          self.stream.programMapTable.pcrPid = (data[offset + 8] & 0x1f) << 8 | data[offset + 9];
+
+	          // align offset to the first entry in the PMT
+	          offset += 12 + pmtProgramDescriptorsLength;
+
+	          // iterate through the entries
+	          while (0 < pmtSectionLength) {
+	            // the type of data carried in the PID this entry describes
+	            streamType = data[offset + 0];
+	            // the PID for this entry
+	            elementaryPID = (data[offset + 1] & 0x1F) << 8 | data[offset + 2];
+
+	            if (streamType === STREAM_TYPES.h264 &&
+	                self.stream.programMapTable[streamType] &&
+	                self.stream.programMapTable[streamType] !== elementaryPID) {
+	              throw new Error("Program has more than 1 video stream");
+	            } else if (streamType === STREAM_TYPES.adts &&
+	                       self.stream.programMapTable[streamType] &&
+	                       self.stream.programMapTable[streamType] !== elementaryPID) {
+	              throw new Error("Program has more than 1 audio Stream");
+	            }
+	            // add the stream type entry to the map
+	            self.stream.programMapTable[streamType] = elementaryPID;
+
+	            // TODO add support for MP3 audio
+
+	            // the length of the entry descriptor
+	            ESInfolength = (data[offset + 3] & 0x0F) << 8 | data[offset + 4];
+	            // capture the stream descriptor for metadata streams
+	            if (streamType === STREAM_TYPES.metadata) {
+	              self.metadataStream.descriptor = new Uint8Array(data.subarray(offset + 5, offset + 5 + ESInfolength));
+	            }
+	            // move to the first byte after the end of this entry
+	            offset += 5 + ESInfolength;
+	            pmtSectionLength -=  5 + ESInfolength;
+	          }
+	        }
+	        // We could test the CRC here to detect corruption with extra CPU cost
+	      } else if (self.stream.networkPid === pid) {
+	        // network information specific data (NIT) packet
+	      } else if (0x0011 === pid) {
+	        // Service Description Table
+	      } else if (0x1FFF === pid) {
+	        // NULL packet
+	      } else if (self.stream.programMapTable.pcrPid) {
+	        // program clock reference (PCR) PID for the primary program
+	        // PTS values are sufficient to synchronize playback for us so
+	        // we can safely ignore these
+	      } else {
+	        videojs.log("Unknown PID parsing TS packet: " + pid);
+	      }
+
+	      return true;
+	    };
+
+	    self.getTags = function() {
+	      return h264Stream.tags;
+	    };
+
+	    self.stats = {
+	      h264Tags: function() {
+	        return h264Stream.tags.length;
+	      },
+	      aacTags: function() {
+	        return aacStream.tags.length;
+	      }
+	    };
+	  };
+
+	  // MPEG2-TS constants
+	  videojs.Hls.SegmentParser.MP2T_PACKET_LENGTH = MP2T_PACKET_LENGTH = 188;
+	  videojs.Hls.SegmentParser.STREAM_TYPES = STREAM_TYPES = {
+	    h264: 0x1b,
+	    adts: 0x0f,
+	    metadata: 0x15
+	  };
+
+	})(window);
+
+	(function(videojs, parseInt, isFinite, mergeOptions, undefined) {
+	  var
+	    noop = function() {},
+
+	    // "forgiving" attribute list psuedo-grammar:
+	    // attributes -> keyvalue (',' keyvalue)*
+	    // keyvalue   -> key '=' value
+	    // key        -> [^=]*
+	    // value      -> '"' [^"]* '"' | [^,]*
+	    attributeSeparator = (function() {
+	      var
+	        key = '[^=]*',
+	        value = '"[^"]*"|[^,]*',
+	        keyvalue = '(?:' + key + ')=(?:' + value + ')';
+
+	      return new RegExp('(?:^|,)(' + keyvalue + ')');
+	    })(),
+	    parseAttributes = function(attributes) {
+	      var
+	        // split the string using attributes as the separator
+	        attrs = attributes.split(attributeSeparator),
+	        i = attrs.length,
+	        result = {},
+	        attr;
+
+	      while (i--) {
+	        // filter out unmatched portions of the string
+	        if (attrs[i] === '') {
+	          continue;
+	        }
+
+	        // split the key and value
+	        attr = /([^=]*)=(.*)/.exec(attrs[i]).slice(1);
+	        // trim whitespace and remove optional quotes around the value
+	        attr[0] = attr[0].replace(/^\s+|\s+$/g, '');
+	        attr[1] = attr[1].replace(/^\s+|\s+$/g, '');
+	        attr[1] = attr[1].replace(/^['"](.*)['"]$/g, '$1');
+	        result[attr[0]] = attr[1];
+	      }
+	      return result;
+	    },
+	    Stream = videojs.Hls.Stream,
+	    LineStream,
+	    ParseStream,
+	    Parser;
+
+	  /**
+	   * A stream that buffers string input and generates a `data` event for each
+	   * line.
+	   */
+	  LineStream = function() {
+	    var buffer = '';
+	    LineStream.prototype.init.call(this);
+
+	    /**
+	     * Add new data to be parsed.
+	     * @param data {string} the text to process
+	     */
+	    this.push = function(data) {
+	      var nextNewline;
+
+	      buffer += data;
+	      nextNewline = buffer.indexOf('\n');
+
+	      for (; nextNewline > -1; nextNewline = buffer.indexOf('\n')) {
+	        this.trigger('data', buffer.substring(0, nextNewline));
+	        buffer = buffer.substring(nextNewline + 1);
+	      }
+	    };
+	  };
+	  LineStream.prototype = new Stream();
+
+	  /**
+	   * A line-level M3U8 parser event stream. It expects to receive input one
+	   * line at a time and performs a context-free parse of its contents. A stream
+	   * interpretation of a manifest can be useful if the manifest is expected to
+	   * be too large to fit comfortably into memory or the entirety of the input
+	   * is not immediately available. Otherwise, it's probably much easier to work
+	   * with a regular `Parser` object.
+	   *
+	   * Produces `data` events with an object that captures the parser's
+	   * interpretation of the input. That object has a property `tag` that is one
+	   * of `uri`, `comment`, or `tag`. URIs only have a single additional
+	   * property, `line`, which captures the entirety of the input without
+	   * interpretation. Comments similarly have a single additional property
+	   * `text` which is the input without the leading `#`.
+	   *
+	   * Tags always have a property `tagType` which is the lower-cased version of
+	   * the M3U8 directive without the `#EXT` or `#EXT-X-` prefix. For instance,
+	   * `#EXT-X-MEDIA-SEQUENCE` becomes `media-sequence` when parsed. Unrecognized
+	   * tags are given the tag type `unknown` and a single additional property
+	   * `data` with the remainder of the input.
+	   */
+	  ParseStream = function() {
+	    ParseStream.prototype.init.call(this);
+	  };
+	  ParseStream.prototype = new Stream();
+	  /**
+	   * Parses an additional line of input.
+	   * @param line {string} a single line of an M3U8 file to parse
+	   */
+	  ParseStream.prototype.push = function(line) {
+	    var match, event;
+
+	    //strip whitespace
+	    line = line.replace(/^\s+|\s+$/g, '');
+	    if (line.length === 0) {
+	      // ignore empty lines
+	      return;
+	    }
+
+	    // URIs
+	    if (line[0] !== '#') {
+	      this.trigger('data', {
+	        type: 'uri',
+	        uri: line
+	      });
+	      return;
+	    }
+
+	    // Comments
+	    if (line.indexOf('#EXT') !== 0) {
+	      this.trigger('data', {
+	        type: 'comment',
+	        text: line.slice(1)
+	      });
+	      return;
+	    }
+
+	    //strip off any carriage returns here so the regex matching
+	    //doesn't have to account for them.
+	    line = line.replace('\r','');
+
+	    // Tags
+	    match = /^#EXTM3U/.exec(line);
+	    if (match) {
+	      this.trigger('data', {
+	        type: 'tag',
+	        tagType: 'm3u'
+	      });
+	      return;
+	    }
+	    match = (/^#EXTINF:?([0-9\.]*)?,?(.*)?$/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'inf'
+	      };
+	      if (match[1]) {
+	        event.duration = parseFloat(match[1]);
+	      }
+	      if (match[2]) {
+	        event.title = match[2];
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-TARGETDURATION:?([0-9.]*)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'targetduration'
+	      };
+	      if (match[1]) {
+	        event.duration = parseInt(match[1], 10);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#ZEN-TOTAL-DURATION:?([0-9.]*)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'totalduration'
+	      };
+	      if (match[1]) {
+	        event.duration = parseInt(match[1], 10);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-VERSION:?([0-9.]*)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'version'
+	      };
+	      if (match[1]) {
+	        event.version = parseInt(match[1], 10);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-MEDIA-SEQUENCE:?(\-?[0-9.]*)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'media-sequence'
+	      };
+	      if (match[1]) {
+	        event.number = parseInt(match[1], 10);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-DISCONTINUITY-SEQUENCE:?(\-?[0-9.]*)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'discontinuity-sequence'
+	      };
+	      if (match[1]) {
+	        event.number = parseInt(match[1], 10);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-PLAYLIST-TYPE:?(.*)?$/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'playlist-type'
+	      };
+	      if (match[1]) {
+	        event.playlistType = match[1];
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-BYTERANGE:?([0-9.]*)?@?([0-9.]*)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'byterange'
+	      };
+	      if (match[1]) {
+	        event.length = parseInt(match[1], 10);
+	      }
+	      if (match[2]) {
+	        event.offset = parseInt(match[2], 10);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-ALLOW-CACHE:?(YES|NO)?/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'allow-cache'
+	      };
+	      if (match[1]) {
+	        event.allowed = !(/NO/).test(match[1]);
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-STREAM-INF:?(.*)$/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'stream-inf'
+	      };
+	      if (match[1]) {
+	        event.attributes = parseAttributes(match[1]);
+
+	        if (event.attributes.RESOLUTION) {
+	          (function() {
+	            var
+	              split = event.attributes.RESOLUTION.split('x'),
+	              resolution = {};
+	            if (split[0]) {
+	              resolution.width = parseInt(split[0], 10);
+	            }
+	            if (split[1]) {
+	              resolution.height = parseInt(split[1], 10);
+	            }
+	            event.attributes.RESOLUTION = resolution;
+	          })();
+	        }
+	        if (event.attributes.BANDWIDTH) {
+	          event.attributes.BANDWIDTH = parseInt(event.attributes.BANDWIDTH, 10);
+	        }
+	        if (event.attributes['PROGRAM-ID']) {
+	          event.attributes['PROGRAM-ID'] = parseInt(event.attributes['PROGRAM-ID'], 10);
+	        }
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+	    match = (/^#EXT-X-ENDLIST/).exec(line);
+	    if (match) {
+	      this.trigger('data', {
+	        type: 'tag',
+	        tagType: 'endlist'
+	      });
+	      return;
+	    }
+	    match = (/^#EXT-X-DISCONTINUITY/).exec(line);
+	    if (match) {
+	      this.trigger('data', {
+	        type: 'tag',
+	        tagType: 'discontinuity'
+	      });
+	      return;
+	    }
+	    match = (/^#EXT-X-KEY:?(.*)$/).exec(line);
+	    if (match) {
+	      event = {
+	        type: 'tag',
+	        tagType: 'key'
+	      };
+	      if (match[1]) {
+	        event.attributes = parseAttributes(match[1]);
+	        // parse the IV string into a Uint32Array
+	        if (event.attributes.IV) {
+	          if (event.attributes.IV.substring(0,2) === '0x') {
+	            event.attributes.IV = event.attributes.IV.substring(2);
+	          }
+
+	          event.attributes.IV = event.attributes.IV.match(/.{8}/g);
+	          event.attributes.IV[0] = parseInt(event.attributes.IV[0], 16);
+	          event.attributes.IV[1] = parseInt(event.attributes.IV[1], 16);
+	          event.attributes.IV[2] = parseInt(event.attributes.IV[2], 16);
+	          event.attributes.IV[3] = parseInt(event.attributes.IV[3], 16);
+	          event.attributes.IV = new Uint32Array(event.attributes.IV);
+	        }
+	      }
+	      this.trigger('data', event);
+	      return;
+	    }
+
+	    // unknown tag type
+	    this.trigger('data', {
+	      type: 'tag',
+	      data: line.slice(4, line.length)
+	    });
+	  };
+
+	  /**
+	   * A parser for M3U8 files. The current interpretation of the input is
+	   * exposed as a property `manifest` on parser objects. It's just two lines to
+	   * create and parse a manifest once you have the contents available as a string:
+	   *
+	   * ```js
+	   * var parser = new videojs.m3u8.Parser();
+	   * parser.push(xhr.responseText);
+	   * ```
+	   *
+	   * New input can later be applied to update the manifest object by calling
+	   * `push` again.
+	   *
+	   * The parser attempts to create a usable manifest object even if the
+	   * underlying input is somewhat nonsensical. It emits `info` and `warning`
+	   * events during the parse if it encounters input that seems invalid or
+	   * requires some property of the manifest object to be defaulted.
+	   */
+	  Parser = function() {
+	    var
+	      self = this,
+	      uris = [],
+	      currentUri = {},
+	      key;
+	    Parser.prototype.init.call(this);
+
+	    this.lineStream = new LineStream();
+	    this.parseStream = new ParseStream();
+	    this.lineStream.pipe(this.parseStream);
+
+	    // the manifest is empty until the parse stream begins delivering data
+	    this.manifest = {
+	      allowCache: true
+	    };
+
+	    // update the manifest with the m3u8 entry from the parse stream
+	    this.parseStream.on('data', function(entry) {
+	      ({
+	        tag: function() {
+	          // switch based on the tag type
+	          (({
+	            'allow-cache': function() {
+	              this.manifest.allowCache = entry.allowed;
+	              if (!('allowed' in entry)) {
+	                this.trigger('info', {
+	                  message: 'defaulting allowCache to YES'
+	                });
+	                this.manifest.allowCache = true;
+	              }
+	            },
+	            'byterange': function() {
+	              var byterange = {};
+	              if ('length' in entry) {
+	                currentUri.byterange = byterange;
+	                byterange.length = entry.length;
+
+	                if (!('offset' in entry)) {
+	                  this.trigger('info', {
+	                    message: 'defaulting offset to zero'
+	                  });
+	                  entry.offset = 0;
+	                }
+	              }
+	              if ('offset' in entry) {
+	                currentUri.byterange = byterange;
+	                byterange.offset = entry.offset;
+	              }
+	            },
+	            'endlist': function() {
+	              this.manifest.endList = true;
+	            },
+	            'inf': function() {
+	              if (!('mediaSequence' in this.manifest)) {
+	                this.manifest.mediaSequence = 0;
+	                this.trigger('info', {
+	                  message: 'defaulting media sequence to zero'
+	                });
+	              }
+	              if (!('discontinuitySequence' in this.manifest)) {
+	                this.manifest.discontinuitySequence = 0;
+	                this.trigger('info', {
+	                  message: 'defaulting discontinuity sequence to zero'
+	                });
+	              }
+	              if (entry.duration >= 0) {
+	                currentUri.duration = entry.duration;
+	              }
+
+	              this.manifest.segments = uris;
+
+	            },
+	            'key': function() {
+	              if (!entry.attributes) {
+	                this.trigger('warn', {
+	                  message: 'ignoring key declaration without attribute list'
+	                });
+	                return;
+	              }
+	              // clear the active encryption key
+	              if (entry.attributes.METHOD === 'NONE') {
+	                key = null;
+	                return;
+	              }
+	              if (!entry.attributes.URI) {
+	                this.trigger('warn', {
+	                  message: 'ignoring key declaration without URI'
+	                });
+	                return;
+	              }
+	              if (!entry.attributes.METHOD) {
+	                this.trigger('warn', {
+	                  message: 'defaulting key method to AES-128'
+	                });
+	              }
+
+	              // setup an encryption key for upcoming segments
+	              key = {
+	                method: entry.attributes.METHOD || 'AES-128',
+	                uri: entry.attributes.URI
+	              };
+
+	              if (entry.attributes.IV !== undefined) {
+	                key.iv = entry.attributes.IV;
+	              }
+	            },
+	            'media-sequence': function() {
+	              if (!isFinite(entry.number)) {
+	                this.trigger('warn', {
+	                  message: 'ignoring invalid media sequence: ' + entry.number
+	                });
+	                return;
+	              }
+	              this.manifest.mediaSequence = entry.number;
+	            },
+	            'discontinuity-sequence': function() {
+	              if (!isFinite(entry.number)) {
+	                this.trigger('warn', {
+	                  message: 'ignoring invalid discontinuity sequence: ' + entry.number
+	                });
+	                return;
+	              }
+	              this.manifest.discontinuitySequence = entry.number;
+	            },
+	            'playlist-type': function() {
+	              if (!(/VOD|EVENT/).test(entry.playlistType)) {
+	                this.trigger('warn', {
+	                  message: 'ignoring unknown playlist type: ' + entry.playlist
+	                });
+	                return;
+	              }
+	              this.manifest.playlistType = entry.playlistType;
+	            },
+	            'stream-inf': function() {
+	              this.manifest.playlists = uris;
+
+	              if (!entry.attributes) {
+	                this.trigger('warn', {
+	                  message: 'ignoring empty stream-inf attributes'
+	                });
+	                return;
+	              }
+
+	              if (!currentUri.attributes) {
+	                currentUri.attributes = {};
+	              }
+	              currentUri.attributes = mergeOptions(currentUri.attributes,
+	                                                   entry.attributes);
+	            },
+	            'discontinuity': function() {
+	              currentUri.discontinuity = true;
+	            },
+	            'targetduration': function() {
+	              if (!isFinite(entry.duration) || entry.duration < 0) {
+	                this.trigger('warn', {
+	                  message: 'ignoring invalid target duration: ' + entry.duration
+	                });
+	                return;
+	              }
+	              this.manifest.targetDuration = entry.duration;
+	            },
+	            'totalduration': function() {
+	              if (!isFinite(entry.duration) || entry.duration < 0) {
+	                this.trigger('warn', {
+	                  message: 'ignoring invalid total duration: ' + entry.duration
+	                });
+	                return;
+	              }
+	              this.manifest.totalDuration = entry.duration;
+	            }
+	          })[entry.tagType] || noop).call(self);
+	        },
+	        uri: function() {
+	          currentUri.uri = entry.uri;
+	          uris.push(currentUri);
+
+	          // if no explicit duration was declared, use the target duration
+	          if (this.manifest.targetDuration &&
+	              !('duration' in currentUri)) {
+	            this.trigger('warn', {
+	              message: 'defaulting segment duration to the target duration'
+	            });
+	            currentUri.duration = this.manifest.targetDuration;
+	          }
+	          // annotate with encryption information, if necessary
+	          if (key) {
+	            currentUri.key = key;
+	          }
+
+	          // prepare for the next URI
+	          currentUri = {};
+	        },
+	        comment: function() {
+	          // comments are not important for playback
+	        }
+	      })[entry.type].call(self);
+	    });
+	  };
+	  Parser.prototype = new Stream();
+	  /**
+	   * Parse the input string and update the manifest object.
+	   * @param chunk {string} a potentially incomplete portion of the manifest
+	   */
+	  Parser.prototype.push = function(chunk) {
+	    this.lineStream.push(chunk);
+	  };
+	  /**
+	   * Flush any remaining input. This can be handy if the last line of an M3U8
+	   * manifest did not contain a trailing newline but the file has been
+	   * completely received.
+	   */
+	  Parser.prototype.end = function() {
+	    // flush any buffered input
+	    this.lineStream.push('\n');
+	  };
+
+	  __webpack_provided_window_dot_videojs.m3u8 = {
+	    LineStream: LineStream,
+	    ParseStream: ParseStream,
+	    Parser: Parser
+	  };
+	})(__webpack_provided_window_dot_videojs, window.parseInt, window.isFinite, __webpack_provided_window_dot_videojs.util.mergeOptions);
+
+	(function(videojs){
+	  /**
+	   * Creates and sends an XMLHttpRequest.
+	   * TODO - expose video.js core's XHR and use that instead
+	   *
+	   * @param options {string | object} if this argument is a string, it
+	   * is intrepreted as a URL and a simple GET request is
+	   * inititated. If it is an object, it should contain a `url`
+	   * property that indicates the URL to request and optionally a
+	   * `method` which is the type of HTTP request to send.
+	   * @param callback (optional) {function} a function to call when the
+	   * request completes. If the request was not successful, the first
+	   * argument will be falsey.
+	   * @return {object} the XMLHttpRequest that was initiated.
+	   */
+	   videojs.Hls.xhr = function(url, callback) {
+	    var
+	      options = {
+	        method: 'GET',
+	        timeout: 45 * 1000
+	      },
+	      request,
+	      abortTimeout;
+
+	    if (typeof callback !== 'function') {
+	      callback = function() {};
+	    }
+
+	    if (typeof url === 'object') {
+	      options = videojs.util.mergeOptions(options, url);
+	      url = options.url;
+	    }
+
+	    request = new window.XMLHttpRequest();
+	    request.open(options.method, url);
+	    request.url = url;
+	    request.requestTime = new Date().getTime();
+
+	    if (options.responseType) {
+	      request.responseType = options.responseType;
+	    }
+	    if (options.withCredentials) {
+	      request.withCredentials = true;
+	    }
+	    if (options.timeout) {
+	      abortTimeout = window.setTimeout(function() {
+	        if (request.readyState !== 4) {
+	          request.timedout = true;
+	          request.abort();
+	        }
+	      }, options.timeout);
+	    }
+
+	    request.onreadystatechange = function() {
+	      // wait until the request completes
+	      if (this.readyState !== 4) {
+	        return;
+	      }
+
+	      // clear outstanding timeouts
+	      window.clearTimeout(abortTimeout);
+
+	      // request timeout
+	      if (request.timedout) {
+	        return callback.call(this, 'timeout', url);
+	      }
+
+	      // request aborted or errored
+	      if (this.status >= 400 || this.status === 0) {
+	        return callback.call(this, true, url);
+	      }
+
+	      if (this.response) {
+	        this.responseTime = new Date().getTime();
+	        this.roundTripTime = this.responseTime - this.requestTime;
+	        this.bytesReceived = this.response.byteLength || this.response.length;
+	        this.bandwidth = Math.floor((this.bytesReceived / this.roundTripTime) * 8 * 1000);
+	      }
+
+	      return callback.call(this, false, url);
+	    };
+	    request.send(null);
+	    return request;
+	  };
+
+	})(__webpack_provided_window_dot_videojs);
+
+	(function(window, videojs) {
+	  'use strict';
+
+	  var DEFAULT_TARGET_DURATION = 10;
+	  var duration, seekable, segmentsDuration;
+
+	  /**
+	   * Calculate the media duration from the segments associated with a
+	   * playlist. The duration of a subinterval of the available segments
+	   * may be calculated by specifying a start and end index.
+	   *
+	   * @param playlist {object} a media playlist object
+	   * @param startSequence {number} (optional) an inclusive lower
+	   * boundary for the playlist.  Defaults to 0.
+	   * @param endSequence {number} (optional) an exclusive upper boundary
+	   * for the playlist.  Defaults to playlist length.
+	   * @return {number} the duration between the start index and end
+	   * index.
+	   */
+	  segmentsDuration = function(playlist, startSequence, endSequence) {
+	    var targetDuration, i, segment, expiredSegmentCount, result = 0;
+
+	    startSequence = startSequence || 0;
+	    i = startSequence;
+	    endSequence = endSequence !== undefined ? endSequence : (playlist.segments || []).length;
+	    targetDuration = playlist.targetDuration || DEFAULT_TARGET_DURATION;
+
+	    // estimate expired segment duration using the target duration
+	    expiredSegmentCount = Math.max(playlist.mediaSequence - startSequence, 0);
+	    result += expiredSegmentCount * targetDuration;
+	    i += expiredSegmentCount;
+
+	    // accumulate the segment durations into the result
+	    for (; i < endSequence; i++) {
+	      segment = playlist.segments[i - playlist.mediaSequence];
+	      result += segment.preciseDuration ||
+	                segment.duration ||
+	                targetDuration;
+	    }
+
+	    return result;
+	  };
+
+	  /**
+	   * Calculates the duration of a playlist. If a start and end index
+	   * are specified, the duration will be for the subset of the media
+	   * timeline between those two indices. The total duration for live
+	   * playlists is always Infinity.
+	   * @param playlist {object} a media playlist object
+	   * @param startSequence {number} (optional) an inclusive lower
+	   * boundary for the playlist.  Defaults to 0.
+	   * @param endSequence {number} (optional) an exclusive upper boundary
+	   * for the playlist.  Defaults to playlist length.
+	   * @return {number} the duration between the start index and end
+	   * index.
+	   */
+	  duration = function(playlist, startSequence, endSequence) {
+	    if (!playlist) {
+	      return 0;
+	    }
+
+	    // if a slice of the total duration is not requested, use
+	    // playlist-level duration indicators when they're present
+	    if (startSequence === undefined && endSequence === undefined) {
+	      // if present, use the duration specified in the playlist
+	      if (playlist.totalDuration) {
+	        return playlist.totalDuration;
+	      }
+
+	      // duration should be Infinity for live playlists
+	      if (!playlist.endList) {
+	        return window.Infinity;
+	      }
+	    }
+
+	    // calculate the total duration based on the segment durations
+	    return segmentsDuration(playlist,
+	                            startSequence,
+	                            endSequence);
+	  };
+
+	  /**
+	   * Calculates the interval of time that is currently seekable in a
+	   * playlist.
+	   * @param playlist {object} a media playlist object
+	   * @return {TimeRanges} the periods of time that are valid targets
+	   * for seeking
+	   */
+	  seekable = function(playlist) {
+	    var start, end, liveBuffer, targetDuration, segment, pending, i;
+
+	    // without segments, there are no seekable ranges
+	    if (!playlist.segments) {
+	      return videojs.createTimeRange();
+	    }
+	    // when the playlist is complete, the entire duration is seekable
+	    if (playlist.endList) {
+	      return videojs.createTimeRange(0, duration(playlist));
+	    }
+
+	    start = segmentsDuration(playlist, 0, playlist.mediaSequence);
+	    end = start + segmentsDuration(playlist,
+	                                   playlist.mediaSequence,
+	                                   playlist.mediaSequence + playlist.segments.length);
+	    targetDuration = playlist.targetDuration || DEFAULT_TARGET_DURATION;
+
+	    // live playlists should not expose three segment durations worth
+	    // of content from the end of the playlist
+	    // https://tools.ietf.org/html/draft-pantos-http-live-streaming-16#section-6.3.3
+	    if (!playlist.endList) {
+	      liveBuffer = targetDuration * 3;
+	      // walk backward from the last available segment and track how
+	      // much media time has elapsed until three target durations have
+	      // been traversed. if a segment is part of the interval being
+	      // reported, subtract the overlapping portion of its duration
+	      // from the result.
+	      for (i = playlist.segments.length - 1; i >= 0 && liveBuffer > 0; i--) {
+	        segment = playlist.segments[i];
+	        pending = Math.min(segment.preciseDuration ||
+	                           segment.duration ||
+	                           targetDuration,
+	                           liveBuffer);
+	        liveBuffer -= pending;
+	        end -= pending;
+	      }
+	    }
+
+	    return videojs.createTimeRange(start, end);
+	  };
+
+	  // exports
+	  videojs.Hls.Playlist = {
+	    duration: duration,
+	    seekable: seekable
+	  };
+	})(window, __webpack_provided_window_dot_videojs);
+
+	(function(window, videojs) {
+	  'use strict';
+	  var
+	    resolveUrl = videojs.Hls.resolveUrl,
+	    xhr = videojs.Hls.xhr,
+	    Playlist = videojs.Hls.Playlist,
+
+	    /**
+	     * Returns a new master playlist that is the result of merging an
+	     * updated media playlist into the original version. If the
+	     * updated media playlist does not match any of the playlist
+	     * entries in the original master playlist, null is returned.
+	     * @param master {object} a parsed master M3U8 object
+	     * @param media {object} a parsed media M3U8 object
+	     * @return {object} a new object that represents the original
+	     * master playlist with the updated media playlist merged in, or
+	     * null if the merge produced no change.
+	     */
+	    updateMaster = function(master, media) {
+	      var
+	        changed = false,
+	        result = videojs.util.mergeOptions(master, {}),
+	        i,
+	        playlist;
+
+	      i = master.playlists.length;
+	      while (i--) {
+	        playlist = result.playlists[i];
+	        if (playlist.uri === media.uri) {
+	          // consider the playlist unchanged if the number of segments
+	          // are equal and the media sequence number is unchanged
+	          if (playlist.segments &&
+	              media.segments &&
+	              playlist.segments.length === media.segments.length &&
+	              playlist.mediaSequence === media.mediaSequence) {
+	            continue;
+	          }
+
+	          result.playlists[i] = videojs.util.mergeOptions(playlist, media);
+	          result.playlists[media.uri] = result.playlists[i];
+	          changed = true;
+	        }
+	      }
+	      return changed ? result : null;
+	    },
+
+	    PlaylistLoader = function(srcUrl, withCredentials) {
+	      var
+	        loader = this,
+	        dispose,
+	        mediaUpdateTimeout,
+	        request,
+	        haveMetadata;
+
+	      PlaylistLoader.prototype.init.call(this);
+
+	      if (!srcUrl) {
+	        throw new Error('A non-empty playlist URL is required');
+	      }
+
+	      // update the playlist loader's state in response to a new or
+	      // updated playlist.
+	      haveMetadata = function(error, xhr, url) {
+	        var parser, refreshDelay, update;
+
+	        loader.setBandwidth(request || xhr);
+
+	        // any in-flight request is now finished
+	        request = null;
+
+	        if (error) {
+	          loader.error = {
+	            status: xhr.status,
+	            message: 'HLS playlist request error at URL: ' + url,
+	            responseText: xhr.responseText,
+	            code: (xhr.status >= 500) ? 4 : 2
+	          };
+	          return loader.trigger('error');
+	        }
+
+	        loader.state = 'HAVE_METADATA';
+
+	        parser = new videojs.m3u8.Parser();
+	        parser.push(xhr.responseText);
+	        parser.end();
+	        parser.manifest.uri = url;
+
+	        // merge this playlist into the master
+	        update = updateMaster(loader.master, parser.manifest);
+	        refreshDelay = (parser.manifest.targetDuration || 10) * 1000;
+	        if (update) {
+	          loader.master = update;
+	          loader.updateMediaPlaylist_(parser.manifest);
+	        } else {
+	          // if the playlist is unchanged since the last reload,
+	          // try again after half the target duration
+	          refreshDelay /= 2;
+	        }
+
+	        // refresh live playlists after a target duration passes
+	        if (!loader.media().endList) {
+	          window.clearTimeout(mediaUpdateTimeout);
+	          mediaUpdateTimeout = window.setTimeout(function() {
+	            loader.trigger('mediaupdatetimeout');
+	          }, refreshDelay);
+	        }
+
+	        loader.trigger('loadedplaylist');
+	      };
+
+	      // initialize the loader state
+	      loader.state = 'HAVE_NOTHING';
+
+	      // the total duration of all segments that expired and have been
+	      // removed from the current playlist after the last
+	      // #EXT-X-DISCONTINUITY. In a live playlist without
+	      // discontinuities, this is the total amount of time that has
+	      // been removed from the stream since the playlist loader began
+	      // tracking it.
+	      loader.expiredPostDiscontinuity_ = 0;
+
+	      // the total duration of all segments that expired and have been
+	      // removed from the current playlist before the last
+	      // #EXT-X-DISCONTINUITY. The total amount of time that has
+	      // expired is always the sum of expiredPreDiscontinuity_ and
+	      // expiredPostDiscontinuity_.
+	      loader.expiredPreDiscontinuity_ = 0;
+
+	      // capture the prototype dispose function
+	      dispose = this.dispose;
+
+	      /**
+	       * Abort any outstanding work and clean up.
+	       */
+	      loader.dispose = function() {
+	        if (request) {
+	          request.onreadystatechange = null;
+	          request.abort();
+	          request = null;
+	        }
+	        window.clearTimeout(mediaUpdateTimeout);
+	        dispose.call(this);
+	      };
+
+	      /**
+	       * When called without any arguments, returns the currently
+	       * active media playlist. When called with a single argument,
+	       * triggers the playlist loader to asynchronously switch to the
+	       * specified media playlist. Calling this method while the
+	       * loader is in the HAVE_NOTHING or HAVE_MASTER states causes an
+	       * error to be emitted but otherwise has no effect.
+	       * @param playlist (optional) {object} the parsed media playlist
+	       * object to switch to
+	       */
+	      loader.media = function(playlist) {
+	        var mediaChange = false;
+	        // getter
+	        if (!playlist) {
+	          return loader.media_;
+	        }
+
+	        // setter
+	        if (loader.state === 'HAVE_NOTHING' || loader.state === 'HAVE_MASTER') {
+	          throw new Error('Cannot switch media playlist from ' + loader.state);
+	        }
+
+	        // find the playlist object if the target playlist has been
+	        // specified by URI
+	        if (typeof playlist === 'string') {
+	          if (!loader.master.playlists[playlist]) {
+	            throw new Error('Unknown playlist URI: ' + playlist);
+	          }
+	          playlist = loader.master.playlists[playlist];
+	        }
+
+	        mediaChange = playlist.uri !== loader.media_.uri;
+
+	        // switch to fully loaded playlists immediately
+	        if (loader.master.playlists[playlist.uri].endList) {
+	          // abort outstanding playlist requests
+	          if (request) {
+	            request.onreadystatechange = null;
+	            request.abort();
+	            request = null;
+	          }
+	          loader.state = 'HAVE_METADATA';
+	          loader.media_ = playlist;
+
+	          // trigger media change if the active media has been updated
+	          if (mediaChange) {
+	            loader.trigger('mediachange');
+	          }
+	          return;
+	        }
+
+	        // switching to the active playlist is a no-op
+	        if (!mediaChange) {
+	          return;
+	        }
+
+	        loader.state = 'SWITCHING_MEDIA';
+
+	        // there is already an outstanding playlist request
+	        if (request) {
+	          if (resolveUrl(loader.master.uri, playlist.uri) === request.url) {
+	            // requesting to switch to the same playlist multiple times
+	            // has no effect after the first
+	            return;
+	          }
+	          request.onreadystatechange = null;
+	          request.abort();
+	          request = null;
+	        }
+
+	        // request the new playlist
+	        request = xhr({
+	          url: resolveUrl(loader.master.uri, playlist.uri),
+	          withCredentials: withCredentials
+	        }, function(error) {
+	          haveMetadata(error, this, playlist.uri);
+	          loader.trigger('mediachange');
+	        });
+	      };
+
+	      loader.setBandwidth = function(xhr) {
+	        loader.bandwidth = xhr.bandwidth;
+	      };
+
+	      // live playlist staleness timeout
+	      loader.on('mediaupdatetimeout', function() {
+	        if (loader.state !== 'HAVE_METADATA') {
+	          // only refresh the media playlist if no other activity is going on
+	          return;
+	        }
+
+	        loader.state = 'HAVE_CURRENT_METADATA';
+	        request = xhr({
+	          url: resolveUrl(loader.master.uri, loader.media().uri),
+	          withCredentials: withCredentials
+	        }, function(error) {
+	          haveMetadata(error, this, loader.media().uri);
+	        });
+	      });
+
+	      // request the specified URL
+	      xhr({
+	        url: srcUrl,
+	        withCredentials: withCredentials
+	      }, function(error) {
+	        var parser, i;
+
+	        if (error) {
+	          loader.error = {
+	            status: this.status,
+	            message: 'HLS playlist request error at URL: ' + srcUrl,
+	            responseText: this.responseText,
+	            code: 2 // MEDIA_ERR_NETWORK
+	          };
+	          return loader.trigger('error');
+	        }
+
+	        parser = new videojs.m3u8.Parser();
+	        parser.push(this.responseText);
+	        parser.end();
+
+	        loader.state = 'HAVE_MASTER';
+
+	        parser.manifest.uri = srcUrl;
+
+	        // loaded a master playlist
+	        if (parser.manifest.playlists) {
+	          loader.master = parser.manifest;
+
+	          // setup by-URI lookups
+	          i = loader.master.playlists.length;
+	          while (i--) {
+	            loader.master.playlists[loader.master.playlists[i].uri] = loader.master.playlists[i];
+	          }
+
+	          request = xhr({
+	            url: resolveUrl(srcUrl, parser.manifest.playlists[0].uri),
+	            withCredentials: withCredentials
+	          }, function(error) {
+	            // pass along the URL specified in the master playlist
+	            haveMetadata(error,
+	                         this,
+	                         parser.manifest.playlists[0].uri);
+	            if (!error) {
+	              loader.trigger('loadedmetadata');
+	            }
+	          });
+	          return loader.trigger('loadedplaylist');
+	        }
+
+	        // loaded a media playlist
+	        // infer a master playlist if none was previously requested
+	        loader.master = {
+	          uri: window.location.href,
+	          playlists: [{
+	            uri: srcUrl
+	          }]
+	        };
+	        loader.master.playlists[srcUrl] = loader.master.playlists[0];
+	        haveMetadata(null, this, srcUrl);
+	        return loader.trigger('loadedmetadata');
+	      });
+	    };
+	  PlaylistLoader.prototype = new videojs.Hls.Stream();
+
+	  /**
+	   * Update the PlaylistLoader state to reflect the changes in an
+	   * update to the current media playlist.
+	   * @param update {object} the updated media playlist object
+	   */
+	  PlaylistLoader.prototype.updateMediaPlaylist_ = function(update) {
+	    var lastDiscontinuity, expiredCount, i;
+
+	    if (this.media_) {
+	      expiredCount = update.mediaSequence - this.media_.mediaSequence;
+
+	      // setup the index for duration calculations so that the newly
+	      // expired time will be accumulated after the last
+	      // discontinuity, unless we discover otherwise
+	      lastDiscontinuity = this.media_.mediaSequence;
+
+	      if (this.media_.discontinuitySequence !== update.discontinuitySequence) {
+	        i = expiredCount;
+	        while (i--) {
+	          if (this.media_.segments[i].discontinuity) {
+	            // a segment that begins a new discontinuity sequence has expired
+	            lastDiscontinuity = i + this.media_.mediaSequence;
+	            this.expiredPreDiscontinuity_ += this.expiredPostDiscontinuity_;
+	            this.expiredPostDiscontinuity_ = 0;
+	            break;
+	          }
+	        }
+	      }
+
+	      // update the expirated durations
+	      this.expiredPreDiscontinuity_ += Playlist.duration(this.media_,
+	                                                         this.media_.mediaSequence,
+	                                                         lastDiscontinuity);
+	      this.expiredPostDiscontinuity_ += Playlist.duration(this.media_,
+	                                                         lastDiscontinuity,
+	                                                         this.media_.mediaSequence + expiredCount);
+	    }
+
+	    this.media_ = this.master.playlists[update.uri];
+	  };
+
+	  videojs.Hls.PlaylistLoader = PlaylistLoader;
+	})(window, __webpack_provided_window_dot_videojs);
+
+	(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+	(function (global){
+	global.window.pkcs7 = {
+	  unpad: require('./unpad')
+	};
+
+	}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+	},{"./unpad":2}],2:[function(require,module,exports){
+	/*
+	 * pkcs7.unpad
+	 * https://github.com/brightcove/pkcs7
+	 *
+	 * Copyright (c) 2014 Brightcove
+	 * Licensed under the apache2 license.
+	 */
+
+	'use strict';
+
+	/**
+	 * Returns the subarray of a Uint8Array without PKCS#7 padding.
+	 * @param padded {Uint8Array} unencrypted bytes that have been padded
+	 * @return {Uint8Array} the unpadded bytes
+	 * @see http://tools.ietf.org/html/rfc5652
+	 */
+	module.exports = function unpad(padded) {
+	  return padded.subarray(0, padded.byteLength - padded[padded.byteLength - 1]);
+	};
+
+	},{}]},{},[1]);
+	(function(window, videojs, unpad) {
+	'use strict';
+
+	var AES, AsyncStream, Decrypter, decrypt, ntoh;
+
+	/**
+	 * Convert network-order (big-endian) bytes into their little-endian
+	 * representation.
+	 */
+	ntoh = function(word) {
+	  return (word << 24) |
+	    ((word & 0xff00) << 8) |
+	    ((word & 0xff0000) >> 8) |
+	    (word >>> 24);
+	};
+
+	/**
+	 * Schedule out an AES key for both encryption and decryption. This
+	 * is a low-level class. Use a cipher mode to do bulk encryption.
+	 *
+	 * @constructor
+	 * @param key {Array} The key as an array of 4, 6 or 8 words.
+	 */
+	AES = function (key) {
+	  this._precompute();
+
+	  var i, j, tmp,
+	    encKey, decKey,
+	    sbox = this._tables[0][4], decTable = this._tables[1],
+	    keyLen = key.length, rcon = 1;
+
+	  if (keyLen !== 4 && keyLen !== 6 && keyLen !== 8) {
+	    throw new Error("Invalid aes key size");
+	  }
+
+	  encKey = key.slice(0);
+	  decKey = [];
+	  this._key = [encKey, decKey];
+
+	  // schedule encryption keys
+	  for (i = keyLen; i < 4 * keyLen + 28; i++) {
+	    tmp = encKey[i-1];
+
+	    // apply sbox
+	    if (i%keyLen === 0 || (keyLen === 8 && i%keyLen === 4)) {
+	      tmp = sbox[tmp>>>24]<<24 ^ sbox[tmp>>16&255]<<16 ^ sbox[tmp>>8&255]<<8 ^ sbox[tmp&255];
+
+	      // shift rows and add rcon
+	      if (i%keyLen === 0) {
+	        tmp = tmp<<8 ^ tmp>>>24 ^ rcon<<24;
+	        rcon = rcon<<1 ^ (rcon>>7)*283;
+	      }
+	    }
+
+	    encKey[i] = encKey[i-keyLen] ^ tmp;
+	  }
+
+	  // schedule decryption keys
+	  for (j = 0; i; j++, i--) {
+	    tmp = encKey[j&3 ? i : i - 4];
+	    if (i<=4 || j<4) {
+	      decKey[j] = tmp;
+	    } else {
+	      decKey[j] = decTable[0][sbox[tmp>>>24      ]] ^
+	                  decTable[1][sbox[tmp>>16  & 255]] ^
+	                  decTable[2][sbox[tmp>>8   & 255]] ^
+	                  decTable[3][sbox[tmp      & 255]];
+	    }
+	  }
+	};
+
+	AES.prototype = {
+	  /**
+	   * The expanded S-box and inverse S-box tables. These will be computed
+	   * on the client so that we don't have to send them down the wire.
+	   *
+	   * There are two tables, _tables[0] is for encryption and
+	   * _tables[1] is for decryption.
+	   *
+	   * The first 4 sub-tables are the expanded S-box with MixColumns. The
+	   * last (_tables[01][4]) is the S-box itself.
+	   *
+	   * @private
+	   */
+	  _tables: [[[],[],[],[],[]],[[],[],[],[],[]]],
+
+	  /**
+	   * Expand the S-box tables.
+	   *
+	   * @private
+	   */
+	  _precompute: function () {
+	   var encTable = this._tables[0], decTable = this._tables[1],
+	       sbox = encTable[4], sboxInv = decTable[4],
+	       i, x, xInv, d=[], th=[], x2, x4, x8, s, tEnc, tDec;
+
+	    // Compute double and third tables
+	   for (i = 0; i < 256; i++) {
+	     th[( d[i] = i<<1 ^ (i>>7)*283 )^i]=i;
+	   }
+
+	   for (x = xInv = 0; !sbox[x]; x ^= x2 || 1, xInv = th[xInv] || 1) {
+	     // Compute sbox
+	     s = xInv ^ xInv<<1 ^ xInv<<2 ^ xInv<<3 ^ xInv<<4;
+	     s = s>>8 ^ s&255 ^ 99;
+	     sbox[x] = s;
+	     sboxInv[s] = x;
+
+	     // Compute MixColumns
+	     x8 = d[x4 = d[x2 = d[x]]];
+	     tDec = x8*0x1010101 ^ x4*0x10001 ^ x2*0x101 ^ x*0x1010100;
+	     tEnc = d[s]*0x101 ^ s*0x1010100;
+
+	     for (i = 0; i < 4; i++) {
+	       encTable[i][x] = tEnc = tEnc<<24 ^ tEnc>>>8;
+	       decTable[i][s] = tDec = tDec<<24 ^ tDec>>>8;
+	     }
+	   }
+
+	   // Compactify. Considerable speedup on Firefox.
+	   for (i = 0; i < 5; i++) {
+	     encTable[i] = encTable[i].slice(0);
+	     decTable[i] = decTable[i].slice(0);
+	   }
+	  },
+
+	  /**
+	   * Decrypt 16 bytes, specified as four 32-bit words.
+	   * @param encrypted0 {number} the first word to decrypt
+	   * @param encrypted1 {number} the second word to decrypt
+	   * @param encrypted2 {number} the third word to decrypt
+	   * @param encrypted3 {number} the fourth word to decrypt
+	   * @param out {Int32Array} the array to write the decrypted words
+	   * into
+	   * @param offset {number} the offset into the output array to start
+	   * writing results
+	   * @return {Array} The plaintext.
+	   */
+	  decrypt:function (encrypted0, encrypted1, encrypted2, encrypted3, out, offset) {
+	    var key = this._key[1],
+	        // state variables a,b,c,d are loaded with pre-whitened data
+	        a = encrypted0 ^ key[0],
+	        b = encrypted3 ^ key[1],
+	        c = encrypted2 ^ key[2],
+	        d = encrypted1 ^ key[3],
+	        a2, b2, c2,
+
+	        nInnerRounds = key.length / 4 - 2, // key.length === 2 ?
+	        i,
+	        kIndex = 4,
+	        table = this._tables[1],
+
+	        // load up the tables
+	        table0    = table[0],
+	        table1    = table[1],
+	        table2    = table[2],
+	        table3    = table[3],
+	        sbox  = table[4];
+
+	    // Inner rounds. Cribbed from OpenSSL.
+	    for (i = 0; i < nInnerRounds; i++) {
+	      a2 = table0[a>>>24] ^ table1[b>>16 & 255] ^ table2[c>>8 & 255] ^ table3[d & 255] ^ key[kIndex];
+	      b2 = table0[b>>>24] ^ table1[c>>16 & 255] ^ table2[d>>8 & 255] ^ table3[a & 255] ^ key[kIndex + 1];
+	      c2 = table0[c>>>24] ^ table1[d>>16 & 255] ^ table2[a>>8 & 255] ^ table3[b & 255] ^ key[kIndex + 2];
+	      d  = table0[d>>>24] ^ table1[a>>16 & 255] ^ table2[b>>8 & 255] ^ table3[c & 255] ^ key[kIndex + 3];
+	      kIndex += 4;
+	      a=a2; b=b2; c=c2;
+	    }
+
+	    // Last round.
+	    for (i = 0; i < 4; i++) {
+	      out[(3 & -i) + offset] =
+	        sbox[a>>>24      ]<<24 ^
+	        sbox[b>>16  & 255]<<16 ^
+	        sbox[c>>8   & 255]<<8  ^
+	        sbox[d      & 255]     ^
+	        key[kIndex++];
+	      a2=a; a=b; b=c; c=d; d=a2;
+	    }
+	  }
+	};
+
+	/**
+	 * Decrypt bytes using AES-128 with CBC and PKCS#7 padding.
+	 * @param encrypted {Uint8Array} the encrypted bytes
+	 * @param key {Uint32Array} the bytes of the decryption key
+	 * @param initVector {Uint32Array} the initialization vector (IV) to
+	 * use for the first round of CBC.
+	 * @return {Uint8Array} the decrypted bytes
+	 *
+	 * @see http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+	 * @see http://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_.28CBC.29
+	 * @see https://tools.ietf.org/html/rfc2315
+	 */
+	decrypt = function(encrypted, key, initVector) {
+	  var
+	    // word-level access to the encrypted bytes
+	    encrypted32 = new Int32Array(encrypted.buffer, encrypted.byteOffset, encrypted.byteLength >> 2),
+
+	    decipher = new AES(Array.prototype.slice.call(key)),
+
+	    // byte and word-level access for the decrypted output
+	    decrypted = new Uint8Array(encrypted.byteLength),
+	    decrypted32 = new Int32Array(decrypted.buffer),
+
+	    // temporary variables for working with the IV, encrypted, and
+	    // decrypted data
+	    init0, init1, init2, init3,
+	    encrypted0, encrypted1, encrypted2, encrypted3,
+
+	    // iteration variable
+	    wordIx;
+
+	  // pull out the words of the IV to ensure we don't modify the
+	  // passed-in reference and easier access
+	  init0 = initVector[0];
+	  init1 = initVector[1];
+	  init2 = initVector[2];
+	  init3 = initVector[3];
+
+	  // decrypt four word sequences, applying cipher-block chaining (CBC)
+	  // to each decrypted block
+	  for (wordIx = 0; wordIx < encrypted32.length; wordIx += 4) {
+	    // convert big-endian (network order) words into little-endian
+	    // (javascript order)
+	    encrypted0 = ntoh(encrypted32[wordIx]);
+	    encrypted1 = ntoh(encrypted32[wordIx + 1]);
+	    encrypted2 = ntoh(encrypted32[wordIx + 2]);
+	    encrypted3 = ntoh(encrypted32[wordIx + 3]);
+
+	    // decrypt the block
+	    decipher.decrypt(encrypted0,
+	                     encrypted1,
+	                     encrypted2,
+	                     encrypted3,
+	                     decrypted32,
+	                     wordIx);
+
+	    // XOR with the IV, and restore network byte-order to obtain the
+	    // plaintext
+	    decrypted32[wordIx]     = ntoh(decrypted32[wordIx] ^ init0);
+	    decrypted32[wordIx + 1] = ntoh(decrypted32[wordIx + 1] ^ init1);
+	    decrypted32[wordIx + 2] = ntoh(decrypted32[wordIx + 2] ^ init2);
+	    decrypted32[wordIx + 3] = ntoh(decrypted32[wordIx + 3] ^ init3);
+
+	    // setup the IV for the next round
+	    init0 = encrypted0;
+	    init1 = encrypted1;
+	    init2 = encrypted2;
+	    init3 = encrypted3;
+	  }
+
+	  return decrypted;
+	};
+
+	AsyncStream = function() {
+	  this.jobs = [];
+	  this.delay = 1;
+	  this.timeout_ = null;
+	};
+	AsyncStream.prototype = new videojs.Hls.Stream();
+	AsyncStream.prototype.processJob_ = function() {
+	  this.jobs.shift()();
+	  if (this.jobs.length) {
+	    this.timeout_ = setTimeout(videojs.bind(this, this.processJob_),
+	                               this.delay);
+	  } else {
+	    this.timeout_ = null;
+	  }
+	};
+	AsyncStream.prototype.push = function(job) {
+	  this.jobs.push(job);
+	  if (!this.timeout_) {
+	    this.timeout_ = setTimeout(videojs.bind(this, this.processJob_),
+	                               this.delay);
+	  }
+	};
+
+	Decrypter = function(encrypted, key, initVector, done) {
+	  var
+	    step = Decrypter.STEP,
+	    encrypted32 = new Int32Array(encrypted.buffer),
+	    decrypted = new Uint8Array(encrypted.byteLength),
+	    i = 0;
+	  this.asyncStream_ = new AsyncStream();
+
+	  // split up the encryption job and do the individual chunks asynchronously
+	  this.asyncStream_.push(this.decryptChunk_(encrypted32.subarray(i, i + step),
+	                                            key,
+	                                            initVector,
+	                                            decrypted,
+	                                            i));
+	  for (i = step; i < encrypted32.length; i += step) {
+	    initVector = new Uint32Array([
+	      ntoh(encrypted32[i - 4]),
+	      ntoh(encrypted32[i - 3]),
+	      ntoh(encrypted32[i - 2]),
+	      ntoh(encrypted32[i - 1])
+	    ]);
+	    this.asyncStream_.push(this.decryptChunk_(encrypted32.subarray(i, i + step),
+	                                              key,
+	                                              initVector,
+	                                              decrypted));
+	  }
+	  // invoke the done() callback when everything is finished
+	  this.asyncStream_.push(function() {
+	    // remove pkcs#7 padding from the decrypted bytes
+	    done(null, unpad(decrypted));
+	  });
+	};
+	Decrypter.prototype = new videojs.Hls.Stream();
+	Decrypter.prototype.decryptChunk_ = function(encrypted, key, initVector, decrypted) {
+	  return function() {
+	    var bytes = decrypt(encrypted,
+	                        key,
+	                        initVector);
+	    decrypted.set(bytes, encrypted.byteOffset);
+	  };
+	};
+	// the maximum number of bytes to process at one time
+	Decrypter.STEP = 4 * 8000;
+
+	// exports
+	videojs.Hls.decrypt = decrypt;
+	videojs.Hls.Decrypter = Decrypter;
+	videojs.Hls.AsyncStream = AsyncStream;
+
+	})(window, __webpack_provided_window_dot_videojs, window.pkcs7.unpad);
+	}.call(window));
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ },
 /* 10 */
@@ -16619,7 +20154,7 @@
 	 * Module dependencies.
 	 */
 
-	var global = __webpack_require__(29);
+	var global = __webpack_require__(30);
 
 	/**
 	 * Module exports.
@@ -16640,7 +20175,8 @@
 
 
 /***/ },
-/* 29 */
+/* 29 */,
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -16654,7 +20190,6 @@
 
 
 /***/ },
-/* 30 */,
 /* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -23963,13 +27498,315 @@
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* WEBPACK VAR INJECTION */(function(videojs) {/*** IMPORTS FROM imports-loader ***/
+	(function() {
+
+	(function(window){
+	  var urlCount = 0,
+	      NativeMediaSource = window.MediaSource || window.WebKitMediaSource || {},
+	      nativeUrl = window.URL || {},
+	      EventEmitter,
+	      flvCodec = /video\/flv(;\s*codecs=["']vp6,aac["'])?$/,
+	      objectUrlPrefix = 'blob:vjs-media-source/';
+
+	  EventEmitter = function(){};
+	  EventEmitter.prototype.init = function(){
+	    this.listeners = [];
+	  };
+	  EventEmitter.prototype.addEventListener = function(type, listener){
+	    if (!this.listeners[type]){
+	      this.listeners[type] = [];
+	    }
+	    this.listeners[type].unshift(listener);
+	  };
+	  EventEmitter.prototype.removeEventListener = function(type, listener){
+	    var listeners = this.listeners[type],
+	        i = listeners.length;
+	    while (i--) {
+	      if (listeners[i] === listener) {
+	        return listeners.splice(i, 1);
+	      }
+	    }
+	  };
+	  EventEmitter.prototype.trigger = function(event){
+	    var listeners = this.listeners[event.type] || [],
+	        i = listeners.length;
+	    while (i--) {
+	      listeners[i](event);
+	    }
+	  };
+
+	  // extend the media source APIs
+
+	  // Media Source
+	  videojs.MediaSource = function(){
+	    var self = this;
+	    videojs.MediaSource.prototype.init.call(this);
+
+	    this.sourceBuffers = [];
+	    this.readyState = 'closed';
+	    this.listeners = {
+	      sourceopen: [function(event){
+	        // find the swf where we will push media data
+	        self.swfObj = document.getElementById(event.swfId);
+	        self.readyState = 'open';
+
+	        // trigger load events
+	        if (self.swfObj) {
+	          self.swfObj.vjs_load();
+	        }
+	      }],
+	      webkitsourceopen: [function(event){
+	        self.trigger({
+	          type: 'sourceopen'
+	        });
+	      }]
+	    };
+	  };
+	  videojs.MediaSource.prototype = new EventEmitter();
+
+	  /**
+	   * The maximum size in bytes for append operations to the video.js
+	   * SWF. Calling through to Flash blocks and can be expensive so
+	   * tuning this parameter may improve playback on slower
+	   * systems. There are two factors to consider:
+	   * - Each interaction with the SWF must be quick or you risk dropping
+	   * video frames. To maintain 60fps for the rest of the page, each append
+	   * cannot take longer than 16ms. Given the likelihood that the page will
+	   * be executing more javascript than just playback, you probably want to
+	   * aim for ~8ms.
+	   * - Bigger appends significantly increase throughput. The total number of
+	   * bytes over time delivered to the SWF must exceed the video bitrate or
+	   * playback will stall.
+	   *
+	   * The default is set so that a 4MB/s stream should playback
+	   * without stuttering.
+	   */
+	  videojs.MediaSource.BYTES_PER_SECOND_GOAL = 4 * 1024 * 1024;
+	  videojs.MediaSource.TICKS_PER_SECOND = 60;
+
+	  // create a new source buffer to receive a type of media data
+	  videojs.MediaSource.prototype.addSourceBuffer = function(type){
+	    var sourceBuffer;
+
+	    // if this is an FLV type, we'll push data to flash
+	    if (flvCodec.test(type)) {
+	      // Flash source buffers
+	      sourceBuffer = new videojs.SourceBuffer(this);
+	    } else if (this.nativeSource) {
+	      // native source buffers
+	      sourceBuffer = this.nativeSource.addSourceBuffer.apply(this.nativeSource, arguments);
+	    } else {
+	      throw new Error('NotSupportedError (Video.js)');
+	    }
+
+	    this.sourceBuffers.push(sourceBuffer);
+	    return sourceBuffer;
+	  };
+	  videojs.MediaSource.prototype.endOfStream = function(){
+	    this.readyState = 'ended';
+	  };
+
+	  // store references to the media sources so they can be connected
+	  // to a video element (a swf object)
+	  videojs.mediaSources = {};
+	  // provide a method for a swf object to notify JS that a media source is now open
+	  videojs.MediaSource.open = function(msObjectURL, swfId){
+	    var mediaSource = videojs.mediaSources[msObjectURL];
+
+	    if (mediaSource) {
+	      mediaSource.trigger({
+	        type: 'sourceopen',
+	        swfId: swfId
+	      });
+	    } else {
+	      throw new Error('Media Source not found (Video.js)');
+	    }
+	  };
+
+	  // Source Buffer
+	  videojs.SourceBuffer = function(source){
+	    var self = this,
+
+	        // byte arrays queued to be appended
+	        buffer = [],
+
+	        // the total number of queued bytes
+	        bufferSize = 0,
+	        scheduleTick = function(func) {
+	          // Chrome doesn't invoke requestAnimationFrame callbacks
+	          // in background tabs, so use setTimeout.
+	          window.setTimeout(func,
+	                            Math.ceil(1000 / videojs.MediaSource.TICKS_PER_SECOND));
+	        },
+	        append = function() {
+	          var chunk, i, length, payload, maxSize,
+	              binary = '';
+
+	          if (!buffer.length) {
+	            // do nothing if the buffer is empty
+	            return;
+	          }
+
+	          if (document.hidden) {
+	            // When the document is hidden, the browser will likely
+	            // invoke callbacks less frequently than we want. Just
+	            // append a whole second's worth of data. It doesn't
+	            // matter if the video janks, since the user can't see it.
+	            maxSize = videojs.MediaSource.BYTES_PER_SECOND_GOAL;
+	          } else {
+	            maxSize = Math.ceil(videojs.MediaSource.BYTES_PER_SECOND_GOAL/
+	                                videojs.MediaSource.TICKS_PER_SECOND);
+	          }
+
+	          // concatenate appends up to the max append size
+	          payload = new Uint8Array(Math.min(maxSize, bufferSize));
+	          i = payload.byteLength;
+	          while (i) {
+	            chunk = buffer[0].subarray(0, i);
+
+	            payload.set(chunk, payload.byteLength - i);
+
+	            // requeue any bytes that won't make it this round
+	            if (chunk.byteLength < buffer[0].byteLength) {
+	              buffer[0] = buffer[0].subarray(i);
+	            } else {
+	              buffer.shift();
+	            }
+
+	            i -= chunk.byteLength;
+	          }
+	          bufferSize -= payload.byteLength;
+
+	          // base64 encode the bytes
+	          for (i = 0, length = payload.byteLength; i < length; i++) {
+	            binary += String.fromCharCode(payload[i]);
+	          }
+	          b64str = window.btoa(binary);
+
+	          // bypass normal ExternalInterface calls and pass xml directly
+	          // IE can be slow by default
+	          self.source.swfObj.CallFunction('<invoke name="vjs_appendBuffer"' +
+	                                          'returntype="javascript"><arguments><string>' +
+	                                          b64str +
+	                                          '</string></arguments></invoke>');
+
+	          // schedule another append if necessary
+	          if (bufferSize !== 0) {
+	            scheduleTick(append);
+	          } else {
+	            self.updating = false;
+	            self.trigger({ type: 'updateend' });
+
+	            if (self.source.readyState === 'ended') {
+	              self.source.swfObj.vjs_endOfStream();
+	            }
+	          }
+	        };
+
+	    videojs.SourceBuffer.prototype.init.call(this);
+	    this.source = source;
+
+	    // indicates whether the asynchronous continuation of an operation
+	    // is still being processed
+	    // see https://w3c.github.io/media-source/#widl-SourceBuffer-updating
+	    this.updating = false;
+
+	    // accept video data and pass to the video (swf) object
+	    this.appendBuffer = function(uint8Array){
+	      var error;
+
+	      if (this.updating) {
+	        error = new Error('SourceBuffer.append() cannot be called ' +
+	                          'while an update is in progress');
+	        error.name = 'InvalidStateError';
+	        error.code = 11;
+	        throw error;
+	      }
+	      if (buffer.length === 0) {
+	        scheduleTick(append);
+	      }
+
+	      this.updating = true;
+	      this.source.readyState = 'open';
+	      this.trigger({ type: 'update' });
+
+	      buffer.push(uint8Array);
+	      bufferSize += uint8Array.byteLength;
+	    };
+
+	    // reset the parser and remove any data queued to be sent to the swf
+	    this.abort = function() {
+	      buffer = [];
+	      bufferSize = 0;
+	      this.source.swfObj.vjs_abort();
+
+	      // report any outstanding updates have ended
+	      if (this.updating) {
+	        this.updating = false;
+	        this.trigger({ type: 'updateend' });
+	      }
+
+	    };
+	  };
+	  videojs.SourceBuffer.prototype = new EventEmitter();
+
+	  // URL
+	  videojs.URL = {
+	    createObjectURL: function(object){
+	      var url = objectUrlPrefix + urlCount;
+
+	      urlCount++;
+
+	      // setup the mapping back to object
+	      videojs.mediaSources[url] = object;
+
+	      return url;
+	    }
+	  };
+
+	  // plugin
+	  videojs.plugin('mediaSource', function(options){
+	    var player = this;
+
+	    player.on('loadstart', function(){
+	      var url = player.currentSrc(),
+	          trigger = function(event){
+	            mediaSource.trigger(event);
+	          },
+	          mediaSource;
+
+	      if (player.techName === 'Html5' && url.indexOf(objectUrlPrefix) === 0) {
+	        // use the native media source implementation
+	        mediaSource = videojs.mediaSources[url];
+
+	        if (!mediaSource.nativeUrl) {
+	          // initialize the native source
+	          mediaSource.nativeSource = new NativeMediaSource();
+	          mediaSource.nativeSource.addEventListener('sourceopen', trigger, false);
+	          mediaSource.nativeSource.addEventListener('webkitsourceopen', trigger, false);
+	          mediaSource.nativeUrl = nativeUrl.createObjectURL(mediaSource.nativeSource);
+	        }
+	        player.src(mediaSource.nativeUrl);
+	      }
+	    });
+	  });
+
+	})(this);
+	}.call(window));
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+
+/***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(64);
+	var content = __webpack_require__(65);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(70)(content, {});
+	var update = __webpack_require__(71)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -23986,20 +27823,20 @@
 	}
 
 /***/ },
-/* 64 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(66)();
-	exports.push([module.id, "/*!\nVideo.js Default Styles (http://videojs.com)\nVersion GENERATED_AT_BUILD\nCreate your own skin at http://designer.videojs.com\n*/\n/* SKIN\n================================================================================\nThe main class name for all skin-specific styles. To make your own skin,\nreplace all occurrences of 'vjs-default-skin' with a new name. Then add your new\nskin name to your video tag instead of the default skin.\ne.g. <video class=\"video-js my-skin-name\">\n*/\n.vjs-default-skin {\n  color: #cccccc;\n}\n/* Custom Icon Font\n--------------------------------------------------------------------------------\nThe control icons are from a custom font. Each icon corresponds to a character\n(e.g. \"\\e001\"). Font icons allow for easy scaling and coloring of icons.\n*/\n@font-face {\n  font-family: 'VideoJS';\n  src: url("+__webpack_require__(67)+");\n  src: url("+__webpack_require__(67)+"?#iefix) format('embedded-opentype'), url("+__webpack_require__(65)+") format('woff'), url("+__webpack_require__(68)+") format('truetype'), url("+__webpack_require__(69)+"#icomoon) format('svg');\n  font-weight: normal;\n  font-style: normal;\n}\n/* Base UI Component Classes\n--------------------------------------------------------------------------------\n*/\n/* Slider - used for Volume bar and Seek bar */\n.vjs-default-skin .vjs-slider {\n  /* Replace browser focus highlight with handle highlight */\n  outline: 0;\n  position: relative;\n  cursor: pointer;\n  padding: 0;\n  /* background-color-with-alpha */\n  background-color: #333333;\n  background-color: rgba(51, 51, 51, 0.9);\n}\n.vjs-default-skin .vjs-slider:focus {\n  /* box-shadow */\n  box-shadow: 0 0 2em #ffffff;\n}\n.vjs-default-skin .vjs-slider-handle {\n  position: absolute;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-slider-handle:before {\n  content: \"\\e009\";\n  font-family: VideoJS;\n  font-size: 1em;\n  line-height: 1;\n  text-align: center;\n  text-shadow: 0em 0em 1em #fff;\n  position: absolute;\n  top: 0;\n  left: 0;\n  /* Rotate the square icon to make a diamond */\n  /* transform */\n  -webkit-transform: rotate(-45deg);\n  -ms-transform: rotate(-45deg);\n  transform: rotate(-45deg);\n}\n/* Control Bar\n--------------------------------------------------------------------------------\nThe default control bar that is a container for most of the controls.\n*/\n.vjs-default-skin .vjs-control-bar {\n  /* Start hidden */\n  display: none;\n  position: absolute;\n  /* Place control bar at the bottom of the player box/video.\n     If you want more margin below the control bar, add more height. */\n  bottom: 0;\n  /* Use left/right to stretch to 100% width of player div */\n  left: 0;\n  right: 0;\n  /* Height includes any margin you want above or below control items */\n  height: 3.0em;\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n}\n/* Show the control bar only once the video has started playing */\n.vjs-default-skin.vjs-has-started .vjs-control-bar {\n  display: block;\n  /* Visibility needed to make sure things hide in older browsers too. */\n  visibility: visible;\n  opacity: 1;\n  /* transition */\n  -webkit-transition: visibility 0.1s, opacity 0.1s;\n  transition: visibility 0.1s, opacity 0.1s;\n}\n/* Hide the control bar when the video is playing and the user is inactive  */\n.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  display: block;\n  visibility: hidden;\n  opacity: 0;\n  /* transition */\n  -webkit-transition: visibility 1s, opacity 1s;\n  transition: visibility 1s, opacity 1s;\n}\n.vjs-default-skin.vjs-controls-disabled .vjs-control-bar {\n  display: none;\n}\n.vjs-default-skin.vjs-using-native-controls .vjs-control-bar {\n  display: none;\n}\n/* The control bar shouldn't show after an error */\n.vjs-default-skin.vjs-error .vjs-control-bar {\n  display: none;\n}\n/* Don't hide the control bar if it's audio */\n.vjs-audio.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  opacity: 1;\n  visibility: visible;\n}\n/* IE8 is flakey with fonts, and you have to change the actual content to force\nfonts to show/hide properly.\n  - \"\\9\" IE8 hack didn't work for this\n  - Found in XP IE8 from http://modern.ie. Does not show up in \"IE8 mode\" in IE9\n*/\n@media \\0screen {\n  .vjs-default-skin.vjs-user-inactive.vjs-playing .vjs-control-bar :before {\n    content: \"\";\n  }\n}\n/* General styles for individual controls. */\n.vjs-default-skin .vjs-control {\n  outline: none;\n  position: relative;\n  float: left;\n  text-align: center;\n  margin: 0;\n  padding: 0;\n  height: 3.0em;\n  width: 4em;\n}\n/* Font button icons */\n.vjs-default-skin .vjs-control:before {\n  font-family: VideoJS;\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-control:focus:before,\n.vjs-default-skin .vjs-control:hover:before {\n  text-shadow: 0em 0em 1em #ffffff;\n}\n.vjs-default-skin .vjs-control:focus {\n  /*  outline: 0; */\n  /* keyboard-only users cannot see the focus on several of the UI elements when\n  this is set to 0 */\n}\n/* Hide control text visually, but have it available for screenreaders */\n.vjs-default-skin .vjs-control-text {\n  /* hide-visually */\n  border: 0;\n  clip: rect(0 0 0 0);\n  height: 1px;\n  margin: -1px;\n  overflow: hidden;\n  padding: 0;\n  position: absolute;\n  width: 1px;\n}\n/* Play/Pause\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-play-control {\n  width: 5em;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-play-control:before {\n  content: \"\\e001\";\n}\n.vjs-default-skin.vjs-playing .vjs-play-control:before {\n  content: \"\\e002\";\n}\n/* Playback toggle\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-playback-rate .vjs-playback-rate-value {\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n.vjs-default-skin .vjs-playback-rate.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 4em;\n  left: -2em;\n  list-style: none;\n}\n/* Volume/Mute\n-------------------------------------------------------------------------------- */\n.vjs-default-skin .vjs-mute-control,\n.vjs-default-skin .vjs-volume-menu-button {\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-mute-control:before,\n.vjs-default-skin .vjs-volume-menu-button:before {\n  content: \"\\e006\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-0:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-0:before {\n  content: \"\\e003\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-1:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-1:before {\n  content: \"\\e004\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-2:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-2:before {\n  content: \"\\e005\";\n}\n.vjs-default-skin .vjs-volume-control {\n  width: 5em;\n  float: right;\n}\n.vjs-default-skin .vjs-volume-bar {\n  width: 5em;\n  height: 0.6em;\n  margin: 1.1em auto 0;\n}\n.vjs-default-skin .vjs-volume-level {\n  position: absolute;\n  top: 0;\n  left: 0;\n  height: 0.5em;\n  /* assuming volume starts at 1.0 */\n  width: 100%;\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-volume-bar .vjs-volume-handle {\n  width: 0.5em;\n  height: 0.5em;\n  /* Assumes volume starts at 1.0. If you change the size of the\n     handle relative to the volume bar, you'll need to update this value\n     too. */\n  left: 4.5em;\n}\n.vjs-default-skin .vjs-volume-handle:before {\n  font-size: 0.9em;\n  top: -0.2em;\n  left: -0.2em;\n  width: 1em;\n  height: 1em;\n}\n/* The volume menu button is like menu buttons (captions/subtitles) but works\n    a little differently. It needs to be possible to tab to the volume slider\n    without hitting space bar on the menu button. To do this we're not using\n    display:none to hide the slider menu by default, and instead setting the\n    width and height to zero. */\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu {\n  display: block;\n  width: 0;\n  height: 0;\n  border-top-color: transparent;\n}\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu .vjs-menu-content {\n  height: 0;\n  width: 0;\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing {\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu .vjs-menu-content,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing .vjs-menu-content {\n  height: 2.9em;\n  width: 10em;\n}\n/* Progress\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-progress-control {\n  position: absolute;\n  left: 0;\n  right: 0;\n  width: auto;\n  font-size: 0.3em;\n  height: 1em;\n  /* Set above the rest of the controls. */\n  top: -1em;\n  /* Shrink the bar slower than it grows. */\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* On hover, make the progress bar grow to something that's more clickable.\n    This simply changes the overall font for the progress bar, and this\n    updates both the em-based widths and heights, as wells as the icon font */\n.vjs-default-skin:hover .vjs-progress-control {\n  font-size: .9em;\n  /* Even though we're not changing the top/height, we need to include them in\n      the transition so they're handled correctly. */\n  /* transition */\n  -webkit-transition: all 0.2s;\n  transition: all 0.2s;\n}\n/* Box containing play and load progresses. Also acts as seek scrubber. */\n.vjs-default-skin .vjs-progress-holder {\n  height: 100%;\n}\n/* Progress Bars */\n.vjs-default-skin .vjs-progress-holder .vjs-play-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress div {\n  position: absolute;\n  display: block;\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  /* updated by javascript during playback */\n  width: 0;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-play-progress {\n  /*\n    Using a data URI to create the white diagonal lines with a transparent\n      background. Surprisingly works in IE8.\n      Created using http://www.patternify.com\n    Changing the first color value will change the bar color.\n    Also using a paralax effect to make the lines move backwards.\n      The -50% left position makes that happen.\n  */\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-load-progress {\n  background: #646464 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.2);\n}\n/* there are child elements of the load progress bar that represent the\n   specific time ranges that have been buffered */\n.vjs-default-skin .vjs-load-progress div {\n  background: #787878 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.1);\n}\n.vjs-default-skin .vjs-seek-handle {\n  width: 1.5em;\n  height: 100%;\n}\n.vjs-default-skin .vjs-seek-handle:before {\n  padding-top: 0.1em /* Minor adjustment */;\n}\n/* Live Mode\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin.vjs-live .vjs-time-controls,\n.vjs-default-skin.vjs-live .vjs-time-divider,\n.vjs-default-skin.vjs-live .vjs-progress-control {\n  display: none;\n}\n.vjs-default-skin.vjs-live .vjs-live-display {\n  display: block;\n}\n/* Live Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-live-display {\n  display: none;\n  font-size: 1em;\n  line-height: 3em;\n}\n/* Time Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-time-controls {\n  font-size: 1em;\n  /* Align vertically by making the line height the same as the control bar */\n  line-height: 3em;\n}\n.vjs-default-skin .vjs-current-time {\n  float: left;\n}\n.vjs-default-skin .vjs-duration {\n  float: left;\n}\n/* Remaining time is in the HTML, but not included in default design */\n.vjs-default-skin .vjs-remaining-time {\n  display: none;\n  float: left;\n}\n.vjs-time-divider {\n  float: left;\n  line-height: 3em;\n}\n/* Fullscreen\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-fullscreen-control {\n  width: 3.8em;\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-fullscreen-control:before {\n  content: \"\\e000\";\n}\n/* Switch to the exit icon when the player is in fullscreen */\n.vjs-default-skin.vjs-fullscreen .vjs-fullscreen-control:before {\n  content: \"\\e00b\";\n}\n/* Big Play Button (play button at start)\n--------------------------------------------------------------------------------\nPositioning of the play button in the center or other corners can be done more\neasily in the skin designer. http://designer.videojs.com/\n*/\n.vjs-default-skin .vjs-big-play-button {\n  left: 0.5em;\n  top: 0.5em;\n  font-size: 3em;\n  display: block;\n  z-index: 2;\n  position: absolute;\n  width: 4em;\n  height: 2.6em;\n  text-align: center;\n  vertical-align: middle;\n  cursor: pointer;\n  opacity: 1;\n  /* Need a slightly gray bg so it can be seen on black backgrounds */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  border: 0.1em solid #3b4249;\n  /* border-radius */\n  border-radius: 0.8em;\n  /* box-shadow */\n  box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* Optionally center */\n.vjs-default-skin.vjs-big-play-centered .vjs-big-play-button {\n  /* Center it horizontally */\n  left: 50%;\n  margin-left: -2.1em;\n  /* Center it vertically */\n  top: 50%;\n  margin-top: -1.4em;\n}\n/* Hide if controls are disabled */\n.vjs-default-skin.vjs-controls-disabled .vjs-big-play-button {\n  display: none;\n}\n/* Hide when video starts playing */\n.vjs-default-skin.vjs-has-started .vjs-big-play-button {\n  display: none;\n}\n/* Hide on mobile devices. Remove when we stop using native controls\n    by default on mobile  */\n.vjs-default-skin.vjs-using-native-controls .vjs-big-play-button {\n  display: none;\n}\n.vjs-default-skin:hover .vjs-big-play-button,\n.vjs-default-skin .vjs-big-play-button:focus {\n  outline: 0;\n  border-color: #fff;\n  /* IE8 needs a non-glow hover state */\n  background-color: #505050;\n  background-color: rgba(50, 50, 50, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 3em #ffffff;\n  /* transition */\n  -webkit-transition: all 0s;\n  transition: all 0s;\n}\n.vjs-default-skin .vjs-big-play-button:before {\n  content: \"\\e001\";\n  font-family: VideoJS;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 2.6em;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  position: absolute;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-big-play-button {\n  display: none;\n}\n/* Error Display\n--------------------------------------------------------------------------------\n*/\n.vjs-error-display {\n  display: none;\n}\n.vjs-error .vjs-error-display {\n  display: block;\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-error-display:before {\n  content: 'X';\n  font-family: Arial;\n  font-size: 4em;\n  color: #666666;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 1;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  vertical-align: middle;\n  position: absolute;\n  left: 0;\n  top: 50%;\n  margin-top: -0.5em;\n  width: 100%;\n}\n.vjs-error-display div {\n  position: absolute;\n  bottom: 1em;\n  right: 0;\n  left: 0;\n  font-size: 1.4em;\n  text-align: center;\n  padding: 3px;\n  background: #000000;\n  background: rgba(0, 0, 0, 0.5);\n}\n.vjs-error-display a,\n.vjs-error-display a:visited {\n  color: #F4A460;\n}\n/* Loading Spinner\n--------------------------------------------------------------------------------\n*/\n.vjs-loading-spinner {\n  /* Should be hidden by default */\n  display: none;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  font-size: 4em;\n  line-height: 1;\n  width: 1em;\n  height: 1em;\n  margin-left: -0.5em;\n  margin-top: -0.5em;\n  opacity: 0.75;\n}\n/* Show the spinner when waiting for data and seeking to a new time */\n.vjs-waiting .vjs-loading-spinner,\n.vjs-seeking .vjs-loading-spinner {\n  display: block;\n  /* only animate when showing because it can be processor heavy */\n  /* animation */\n  -webkit-animation: spin 1.5s infinite linear;\n  animation: spin 1.5s infinite linear;\n}\n/* Errors are unrecoverable without user interaction so hide the spinner */\n.vjs-error .vjs-loading-spinner {\n  display: none;\n  /* ensure animation doesn't continue while hidden */\n  /* animation */\n  -webkit-animation: none;\n  animation: none;\n}\n.vjs-default-skin .vjs-loading-spinner:before {\n  content: \"\\e01e\";\n  font-family: VideoJS;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 1em;\n  height: 1em;\n  text-align: center;\n  text-shadow: 0em 0em 0.1em #000;\n}\n@-webkit-keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n  }\n}\n@keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n            transform: rotate(359deg);\n  }\n}\n/* Menu Buttons (Captions/Subtitles/etc.)\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-menu-button {\n  float: right;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-menu {\n  display: none;\n  position: absolute;\n  bottom: 0;\n  left: 0em;\n  /* (Width of vjs-menu - width of button) / 2 */\n  width: 0em;\n  height: 0em;\n  margin-bottom: 3em;\n  border-left: 2em solid transparent;\n  border-right: 2em solid transparent;\n  border-top: 1.55em solid #000000;\n  /* Same width top as ul bottom */\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n/* Button Pop-up Menu */\n.vjs-default-skin .vjs-menu-button .vjs-menu .vjs-menu-content {\n  display: block;\n  padding: 0;\n  margin: 0;\n  position: absolute;\n  width: 10em;\n  bottom: 1.5em;\n  /* Same bottom as vjs-menu border-top */\n  max-height: 15em;\n  overflow: auto;\n  left: -5em;\n  /* Width of menu - width of button / 2 */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  /* box-shadow */\n  box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);\n}\n.vjs-default-skin .vjs-menu-button:hover .vjs-control-content .vjs-menu,\n.vjs-default-skin .vjs-control-content .vjs-menu.vjs-lock-showing {\n  display: block;\n}\n/* prevent menus from opening while scrubbing (FF, IE) */\n.vjs-default-skin.vjs-scrubbing .vjs-menu-button:hover .vjs-control-content .vjs-menu {\n  display: none;\n}\n.vjs-default-skin .vjs-menu-button ul li {\n  list-style: none;\n  margin: 0;\n  padding: 0.3em 0 0.3em 0;\n  line-height: 1.4em;\n  font-size: 1.2em;\n  text-align: center;\n  text-transform: lowercase;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected {\n  background-color: #000;\n}\n.vjs-default-skin .vjs-menu-button ul li:focus,\n.vjs-default-skin .vjs-menu-button ul li:hover,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:focus,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:hover {\n  outline: 0;\n  color: #111;\n  /* background-color-with-alpha */\n  background-color: #ffffff;\n  background-color: rgba(255, 255, 255, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-menu-title {\n  text-align: center;\n  text-transform: uppercase;\n  font-size: 1em;\n  line-height: 2em;\n  padding: 0;\n  margin: 0 0 0.3em 0;\n  font-weight: bold;\n  cursor: default;\n}\n/* Subtitles Button */\n.vjs-default-skin .vjs-subtitles-button:before {\n  content: \"\\e00c\";\n}\n/* Captions Button */\n.vjs-default-skin .vjs-captions-button:before {\n  content: \"\\e008\";\n}\n/* Chapters Button */\n.vjs-default-skin .vjs-chapters-button:before {\n  content: \"\\e00c\";\n}\n.vjs-default-skin .vjs-chapters-button.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 24em;\n  left: -12em;\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-captions-button:focus .vjs-control-content:before,\n.vjs-default-skin .vjs-captions-button:hover .vjs-control-content:before {\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n/*\nREQUIRED STYLES (be careful overriding)\n================================================================================\nWhen loading the player, the video tag is replaced with a DIV,\nthat will hold the video tag or object tag for other playback methods.\nThe div contains the video playback element (Flash or HTML5) and controls,\nand sets the width and height of the video.\n\n** If you want to add some kind of border/padding (e.g. a frame), or special\npositioning, use another containing element. Otherwise you risk messing up\ncontrol positioning and full window mode. **\n*/\n.video-js {\n  background-color: #000;\n  position: relative;\n  padding: 0;\n  /* Start with 10px for base font size so other dimensions can be em based and\n     easily calculable. */\n  font-size: 10px;\n  /* Allow poster to be vertically aligned. */\n  vertical-align: middle;\n  /*  display: table-cell; */\n  /*This works in Safari but not Firefox.*/\n  /* Provide some basic defaults for fonts */\n  font-weight: normal;\n  font-style: normal;\n  /* Avoiding helvetica: issue #376 */\n  font-family: Arial, sans-serif;\n  /* Turn off user selection (text highlighting) by default.\n     The majority of player components will not be text blocks.\n     Text areas will need to turn user selection back on. */\n  /* user-select */\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n/* Playback technology elements expand to the width/height of the containing div\n    <video> or <object> */\n.video-js .vjs-tech {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n/* Fix for Firefox 9 fullscreen (only if it is enabled). Not needed when\n   checking fullScreenEnabled. */\n.video-js:-moz-full-screen {\n  position: absolute;\n}\n/* Fullscreen Styles */\nbody.vjs-full-window {\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  /* Fix for IE6 full-window. http://www.cssplay.co.uk/layouts/fixed.html */\n  overflow-y: auto;\n}\n.video-js.vjs-fullscreen {\n  position: fixed;\n  overflow: hidden;\n  z-index: 1000;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  right: 0;\n  width: 100% !important;\n  height: 100% !important;\n  /* IE6 full-window (underscore hack) */\n  _position: absolute;\n}\n.video-js:-webkit-full-screen {\n  width: 100% !important;\n  height: 100% !important;\n}\n.video-js.vjs-fullscreen.vjs-user-inactive {\n  cursor: none;\n}\n/* Poster Styles */\n.vjs-poster {\n  background-repeat: no-repeat;\n  background-position: 50% 50%;\n  background-size: contain;\n  background-color: #000000;\n  cursor: pointer;\n  margin: 0;\n  padding: 0;\n  position: absolute;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.vjs-poster img {\n  display: block;\n  margin: 0 auto;\n  max-height: 100%;\n  padding: 0;\n  width: 100%;\n}\n/* Hide the poster after the video has started playing */\n.video-js.vjs-has-started .vjs-poster {\n  display: none;\n}\n/* Don't hide the poster if we're playing audio */\n.video-js.vjs-audio.vjs-has-started .vjs-poster {\n  display: block;\n}\n/* Hide the poster when controls are disabled because it's clickable\n    and the native poster can take over */\n.video-js.vjs-controls-disabled .vjs-poster {\n  display: none;\n}\n/* Hide the poster when native controls are used otherwise it covers them */\n.video-js.vjs-using-native-controls .vjs-poster {\n  display: none;\n}\n/* Text Track Styles */\n/* Overall track holder for both captions and subtitles */\n.video-js .vjs-text-track-display {\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 3em;\n  right: 0;\n  pointer-events: none;\n}\n/* Captions Settings Dialog */\n.vjs-caption-settings {\n  position: relative;\n  top: 1em;\n  background-color: #000;\n  opacity: 0.75;\n  color: #FFF;\n  margin: 0 auto;\n  padding: 0.5em;\n  height: 15em;\n  font-family: Arial, Helvetica, sans-serif;\n  font-size: 12px;\n  width: 40em;\n}\n.vjs-caption-settings .vjs-tracksettings {\n  top: 0;\n  bottom: 2em;\n  left: 0;\n  right: 0;\n  position: absolute;\n  overflow: auto;\n}\n.vjs-caption-settings .vjs-tracksettings-colors,\n.vjs-caption-settings .vjs-tracksettings-font {\n  float: left;\n}\n.vjs-caption-settings .vjs-tracksettings-colors:after,\n.vjs-caption-settings .vjs-tracksettings-font:after,\n.vjs-caption-settings .vjs-tracksettings-controls:after {\n  clear: both;\n}\n.vjs-caption-settings .vjs-tracksettings-controls {\n  position: absolute;\n  bottom: 1em;\n  right: 1em;\n}\n.vjs-caption-settings .vjs-tracksetting {\n  margin: 5px;\n  padding: 3px;\n  min-height: 40px;\n}\n.vjs-caption-settings .vjs-tracksetting label {\n  display: block;\n  width: 100px;\n  margin-bottom: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting span {\n  display: inline;\n  margin-left: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting > div {\n  margin-bottom: 5px;\n  min-height: 20px;\n}\n.vjs-caption-settings .vjs-tracksetting > div:last-child {\n  margin-bottom: 0;\n  padding-bottom: 0;\n  min-height: 0;\n}\n.vjs-caption-settings label > input {\n  margin-right: 10px;\n}\n.vjs-caption-settings input[type=\"button\"] {\n  width: 40px;\n  height: 40px;\n}\n/* Hide disabled or unsupported controls */\n.vjs-hidden {\n  display: none !important;\n}\n.vjs-lock-showing {\n  display: block !important;\n  opacity: 1;\n  visibility: visible;\n}\n/*  In IE8 w/ no JavaScript (no HTML5 shim), the video tag doesn't register.\n    The .video-js classname on the video tag also isn't considered.\n    This optional paragraph inside the video tag can provide a message to users\n    about what's required to play video. */\n.vjs-no-js {\n  padding: 2em;\n  color: #ccc;\n  background-color: #333;\n  font-size: 1.8em;\n  font-family: Arial, sans-serif;\n  text-align: center;\n  width: 30em;\n  height: 15em;\n  margin: 0 auto;\n}\n.vjs-no-js a,\n.vjs-no-js a:visited {\n  color: #F4A460;\n}\n/* -----------------------------------------------------------------------------\nThe original source of this file lives at\nhttps://github.com/videojs/video.js/blob/master/src/css/video-js.less */\n.player {\n  background-color: red;\n  border: 2px solid red;\n}\n#vjs-form-overlay {\n  position: relative;\n  background-color: #9ba9b3;\n  width: 30%;\n  height: 30%;\n  color: #000;\n  font-size: 12px;\n}\n#vjs-form-overlay form {\n  display: table;\n}\n#vjs-form-overlay p {\n  display: table-row;\n}\n#vjs-form-overlay label {\n  display: table-cell;\n  padding-right: 12px;\n}\n#vjs-form-overlay input {\n  display: table-cell;\n}\n.hide-el {\n  display: none;\n}\n.show-el {\n  display: block;\n}\n", ""]);
+	exports = module.exports = __webpack_require__(67)();
+	exports.push([module.id, "/*!\nVideo.js Default Styles (http://videojs.com)\nVersion GENERATED_AT_BUILD\nCreate your own skin at http://designer.videojs.com\n*/\n/* SKIN\n================================================================================\nThe main class name for all skin-specific styles. To make your own skin,\nreplace all occurrences of 'vjs-default-skin' with a new name. Then add your new\nskin name to your video tag instead of the default skin.\ne.g. <video class=\"video-js my-skin-name\">\n*/\n.vjs-default-skin {\n  color: #cccccc;\n}\n/* Custom Icon Font\n--------------------------------------------------------------------------------\nThe control icons are from a custom font. Each icon corresponds to a character\n(e.g. \"\\e001\"). Font icons allow for easy scaling and coloring of icons.\n*/\n@font-face {\n  font-family: 'VideoJS';\n  src: url("+__webpack_require__(68)+");\n  src: url("+__webpack_require__(68)+"?#iefix) format('embedded-opentype'), url("+__webpack_require__(66)+") format('woff'), url("+__webpack_require__(69)+") format('truetype'), url("+__webpack_require__(70)+"#icomoon) format('svg');\n  font-weight: normal;\n  font-style: normal;\n}\n/* Base UI Component Classes\n--------------------------------------------------------------------------------\n*/\n/* Slider - used for Volume bar and Seek bar */\n.vjs-default-skin .vjs-slider {\n  /* Replace browser focus highlight with handle highlight */\n  outline: 0;\n  position: relative;\n  cursor: pointer;\n  padding: 0;\n  /* background-color-with-alpha */\n  background-color: #333333;\n  background-color: rgba(51, 51, 51, 0.9);\n}\n.vjs-default-skin .vjs-slider:focus {\n  /* box-shadow */\n  box-shadow: 0 0 2em #ffffff;\n}\n.vjs-default-skin .vjs-slider-handle {\n  position: absolute;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-slider-handle:before {\n  content: \"\\e009\";\n  font-family: VideoJS;\n  font-size: 1em;\n  line-height: 1;\n  text-align: center;\n  text-shadow: 0em 0em 1em #fff;\n  position: absolute;\n  top: 0;\n  left: 0;\n  /* Rotate the square icon to make a diamond */\n  /* transform */\n  -webkit-transform: rotate(-45deg);\n  -ms-transform: rotate(-45deg);\n  transform: rotate(-45deg);\n}\n/* Control Bar\n--------------------------------------------------------------------------------\nThe default control bar that is a container for most of the controls.\n*/\n.vjs-default-skin .vjs-control-bar {\n  /* Start hidden */\n  display: none;\n  position: absolute;\n  /* Place control bar at the bottom of the player box/video.\n     If you want more margin below the control bar, add more height. */\n  bottom: 0;\n  /* Use left/right to stretch to 100% width of player div */\n  left: 0;\n  right: 0;\n  /* Height includes any margin you want above or below control items */\n  height: 3.0em;\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n}\n/* Show the control bar only once the video has started playing */\n.vjs-default-skin.vjs-has-started .vjs-control-bar {\n  display: block;\n  /* Visibility needed to make sure things hide in older browsers too. */\n  visibility: visible;\n  opacity: 1;\n  /* transition */\n  -webkit-transition: visibility 0.1s, opacity 0.1s;\n  transition: visibility 0.1s, opacity 0.1s;\n}\n/* Hide the control bar when the video is playing and the user is inactive  */\n.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  display: block;\n  visibility: hidden;\n  opacity: 0;\n  /* transition */\n  -webkit-transition: visibility 1s, opacity 1s;\n  transition: visibility 1s, opacity 1s;\n}\n.vjs-default-skin.vjs-controls-disabled .vjs-control-bar {\n  display: none;\n}\n.vjs-default-skin.vjs-using-native-controls .vjs-control-bar {\n  display: none;\n}\n/* The control bar shouldn't show after an error */\n.vjs-default-skin.vjs-error .vjs-control-bar {\n  display: none;\n}\n/* Don't hide the control bar if it's audio */\n.vjs-audio.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  opacity: 1;\n  visibility: visible;\n}\n/* IE8 is flakey with fonts, and you have to change the actual content to force\nfonts to show/hide properly.\n  - \"\\9\" IE8 hack didn't work for this\n  - Found in XP IE8 from http://modern.ie. Does not show up in \"IE8 mode\" in IE9\n*/\n@media \\0screen {\n  .vjs-default-skin.vjs-user-inactive.vjs-playing .vjs-control-bar :before {\n    content: \"\";\n  }\n}\n/* General styles for individual controls. */\n.vjs-default-skin .vjs-control {\n  outline: none;\n  position: relative;\n  float: left;\n  text-align: center;\n  margin: 0;\n  padding: 0;\n  height: 3.0em;\n  width: 4em;\n}\n/* Font button icons */\n.vjs-default-skin .vjs-control:before {\n  font-family: VideoJS;\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-control:focus:before,\n.vjs-default-skin .vjs-control:hover:before {\n  text-shadow: 0em 0em 1em #ffffff;\n}\n.vjs-default-skin .vjs-control:focus {\n  /*  outline: 0; */\n  /* keyboard-only users cannot see the focus on several of the UI elements when\n  this is set to 0 */\n}\n/* Hide control text visually, but have it available for screenreaders */\n.vjs-default-skin .vjs-control-text {\n  /* hide-visually */\n  border: 0;\n  clip: rect(0 0 0 0);\n  height: 1px;\n  margin: -1px;\n  overflow: hidden;\n  padding: 0;\n  position: absolute;\n  width: 1px;\n}\n/* Play/Pause\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-play-control {\n  width: 5em;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-play-control:before {\n  content: \"\\e001\";\n}\n.vjs-default-skin.vjs-playing .vjs-play-control:before {\n  content: \"\\e002\";\n}\n/* Playback toggle\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-playback-rate .vjs-playback-rate-value {\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n.vjs-default-skin .vjs-playback-rate.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 4em;\n  left: -2em;\n  list-style: none;\n}\n/* Volume/Mute\n-------------------------------------------------------------------------------- */\n.vjs-default-skin .vjs-mute-control,\n.vjs-default-skin .vjs-volume-menu-button {\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-mute-control:before,\n.vjs-default-skin .vjs-volume-menu-button:before {\n  content: \"\\e006\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-0:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-0:before {\n  content: \"\\e003\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-1:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-1:before {\n  content: \"\\e004\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-2:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-2:before {\n  content: \"\\e005\";\n}\n.vjs-default-skin .vjs-volume-control {\n  width: 5em;\n  float: right;\n}\n.vjs-default-skin .vjs-volume-bar {\n  width: 5em;\n  height: 0.6em;\n  margin: 1.1em auto 0;\n}\n.vjs-default-skin .vjs-volume-level {\n  position: absolute;\n  top: 0;\n  left: 0;\n  height: 0.5em;\n  /* assuming volume starts at 1.0 */\n  width: 100%;\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-volume-bar .vjs-volume-handle {\n  width: 0.5em;\n  height: 0.5em;\n  /* Assumes volume starts at 1.0. If you change the size of the\n     handle relative to the volume bar, you'll need to update this value\n     too. */\n  left: 4.5em;\n}\n.vjs-default-skin .vjs-volume-handle:before {\n  font-size: 0.9em;\n  top: -0.2em;\n  left: -0.2em;\n  width: 1em;\n  height: 1em;\n}\n/* The volume menu button is like menu buttons (captions/subtitles) but works\n    a little differently. It needs to be possible to tab to the volume slider\n    without hitting space bar on the menu button. To do this we're not using\n    display:none to hide the slider menu by default, and instead setting the\n    width and height to zero. */\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu {\n  display: block;\n  width: 0;\n  height: 0;\n  border-top-color: transparent;\n}\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu .vjs-menu-content {\n  height: 0;\n  width: 0;\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing {\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu .vjs-menu-content,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing .vjs-menu-content {\n  height: 2.9em;\n  width: 10em;\n}\n/* Progress\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-progress-control {\n  position: absolute;\n  left: 0;\n  right: 0;\n  width: auto;\n  font-size: 0.3em;\n  height: 1em;\n  /* Set above the rest of the controls. */\n  top: -1em;\n  /* Shrink the bar slower than it grows. */\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* On hover, make the progress bar grow to something that's more clickable.\n    This simply changes the overall font for the progress bar, and this\n    updates both the em-based widths and heights, as wells as the icon font */\n.vjs-default-skin:hover .vjs-progress-control {\n  font-size: .9em;\n  /* Even though we're not changing the top/height, we need to include them in\n      the transition so they're handled correctly. */\n  /* transition */\n  -webkit-transition: all 0.2s;\n  transition: all 0.2s;\n}\n/* Box containing play and load progresses. Also acts as seek scrubber. */\n.vjs-default-skin .vjs-progress-holder {\n  height: 100%;\n}\n/* Progress Bars */\n.vjs-default-skin .vjs-progress-holder .vjs-play-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress div {\n  position: absolute;\n  display: block;\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  /* updated by javascript during playback */\n  width: 0;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-play-progress {\n  /*\n    Using a data URI to create the white diagonal lines with a transparent\n      background. Surprisingly works in IE8.\n      Created using http://www.patternify.com\n    Changing the first color value will change the bar color.\n    Also using a paralax effect to make the lines move backwards.\n      The -50% left position makes that happen.\n  */\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-load-progress {\n  background: #646464 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.2);\n}\n/* there are child elements of the load progress bar that represent the\n   specific time ranges that have been buffered */\n.vjs-default-skin .vjs-load-progress div {\n  background: #787878 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.1);\n}\n.vjs-default-skin .vjs-seek-handle {\n  width: 1.5em;\n  height: 100%;\n}\n.vjs-default-skin .vjs-seek-handle:before {\n  padding-top: 0.1em /* Minor adjustment */;\n}\n/* Live Mode\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin.vjs-live .vjs-time-controls,\n.vjs-default-skin.vjs-live .vjs-time-divider,\n.vjs-default-skin.vjs-live .vjs-progress-control {\n  display: none;\n}\n.vjs-default-skin.vjs-live .vjs-live-display {\n  display: block;\n}\n/* Live Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-live-display {\n  display: none;\n  font-size: 1em;\n  line-height: 3em;\n}\n/* Time Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-time-controls {\n  font-size: 1em;\n  /* Align vertically by making the line height the same as the control bar */\n  line-height: 3em;\n}\n.vjs-default-skin .vjs-current-time {\n  float: left;\n}\n.vjs-default-skin .vjs-duration {\n  float: left;\n}\n/* Remaining time is in the HTML, but not included in default design */\n.vjs-default-skin .vjs-remaining-time {\n  display: none;\n  float: left;\n}\n.vjs-time-divider {\n  float: left;\n  line-height: 3em;\n}\n/* Fullscreen\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-fullscreen-control {\n  width: 3.8em;\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-fullscreen-control:before {\n  content: \"\\e000\";\n}\n/* Switch to the exit icon when the player is in fullscreen */\n.vjs-default-skin.vjs-fullscreen .vjs-fullscreen-control:before {\n  content: \"\\e00b\";\n}\n/* Big Play Button (play button at start)\n--------------------------------------------------------------------------------\nPositioning of the play button in the center or other corners can be done more\neasily in the skin designer. http://designer.videojs.com/\n*/\n.vjs-default-skin .vjs-big-play-button {\n  left: 0.5em;\n  top: 0.5em;\n  font-size: 3em;\n  display: block;\n  z-index: 2;\n  position: absolute;\n  width: 4em;\n  height: 2.6em;\n  text-align: center;\n  vertical-align: middle;\n  cursor: pointer;\n  opacity: 1;\n  /* Need a slightly gray bg so it can be seen on black backgrounds */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  border: 0.1em solid #3b4249;\n  /* border-radius */\n  border-radius: 0.8em;\n  /* box-shadow */\n  box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* Optionally center */\n.vjs-default-skin.vjs-big-play-centered .vjs-big-play-button {\n  /* Center it horizontally */\n  left: 50%;\n  margin-left: -2.1em;\n  /* Center it vertically */\n  top: 50%;\n  margin-top: -1.4em;\n}\n/* Hide if controls are disabled */\n.vjs-default-skin.vjs-controls-disabled .vjs-big-play-button {\n  display: none;\n}\n/* Hide when video starts playing */\n.vjs-default-skin.vjs-has-started .vjs-big-play-button {\n  display: none;\n}\n/* Hide on mobile devices. Remove when we stop using native controls\n    by default on mobile  */\n.vjs-default-skin.vjs-using-native-controls .vjs-big-play-button {\n  display: none;\n}\n.vjs-default-skin:hover .vjs-big-play-button,\n.vjs-default-skin .vjs-big-play-button:focus {\n  outline: 0;\n  border-color: #fff;\n  /* IE8 needs a non-glow hover state */\n  background-color: #505050;\n  background-color: rgba(50, 50, 50, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 3em #ffffff;\n  /* transition */\n  -webkit-transition: all 0s;\n  transition: all 0s;\n}\n.vjs-default-skin .vjs-big-play-button:before {\n  content: \"\\e001\";\n  font-family: VideoJS;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 2.6em;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  position: absolute;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-big-play-button {\n  display: none;\n}\n/* Error Display\n--------------------------------------------------------------------------------\n*/\n.vjs-error-display {\n  display: none;\n}\n.vjs-error .vjs-error-display {\n  display: block;\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-error-display:before {\n  content: 'X';\n  font-family: Arial;\n  font-size: 4em;\n  color: #666666;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 1;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  vertical-align: middle;\n  position: absolute;\n  left: 0;\n  top: 50%;\n  margin-top: -0.5em;\n  width: 100%;\n}\n.vjs-error-display div {\n  position: absolute;\n  bottom: 1em;\n  right: 0;\n  left: 0;\n  font-size: 1.4em;\n  text-align: center;\n  padding: 3px;\n  background: #000000;\n  background: rgba(0, 0, 0, 0.5);\n}\n.vjs-error-display a,\n.vjs-error-display a:visited {\n  color: #F4A460;\n}\n/* Loading Spinner\n--------------------------------------------------------------------------------\n*/\n.vjs-loading-spinner {\n  /* Should be hidden by default */\n  display: none;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  font-size: 4em;\n  line-height: 1;\n  width: 1em;\n  height: 1em;\n  margin-left: -0.5em;\n  margin-top: -0.5em;\n  opacity: 0.75;\n}\n/* Show the spinner when waiting for data and seeking to a new time */\n.vjs-waiting .vjs-loading-spinner,\n.vjs-seeking .vjs-loading-spinner {\n  display: block;\n  /* only animate when showing because it can be processor heavy */\n  /* animation */\n  -webkit-animation: spin 1.5s infinite linear;\n  animation: spin 1.5s infinite linear;\n}\n/* Errors are unrecoverable without user interaction so hide the spinner */\n.vjs-error .vjs-loading-spinner {\n  display: none;\n  /* ensure animation doesn't continue while hidden */\n  /* animation */\n  -webkit-animation: none;\n  animation: none;\n}\n.vjs-default-skin .vjs-loading-spinner:before {\n  content: \"\\e01e\";\n  font-family: VideoJS;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 1em;\n  height: 1em;\n  text-align: center;\n  text-shadow: 0em 0em 0.1em #000;\n}\n@-webkit-keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n  }\n}\n@keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n            transform: rotate(359deg);\n  }\n}\n/* Menu Buttons (Captions/Subtitles/etc.)\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-menu-button {\n  float: right;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-menu {\n  display: none;\n  position: absolute;\n  bottom: 0;\n  left: 0em;\n  /* (Width of vjs-menu - width of button) / 2 */\n  width: 0em;\n  height: 0em;\n  margin-bottom: 3em;\n  border-left: 2em solid transparent;\n  border-right: 2em solid transparent;\n  border-top: 1.55em solid #000000;\n  /* Same width top as ul bottom */\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n/* Button Pop-up Menu */\n.vjs-default-skin .vjs-menu-button .vjs-menu .vjs-menu-content {\n  display: block;\n  padding: 0;\n  margin: 0;\n  position: absolute;\n  width: 10em;\n  bottom: 1.5em;\n  /* Same bottom as vjs-menu border-top */\n  max-height: 15em;\n  overflow: auto;\n  left: -5em;\n  /* Width of menu - width of button / 2 */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  /* box-shadow */\n  box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);\n}\n.vjs-default-skin .vjs-menu-button:hover .vjs-control-content .vjs-menu,\n.vjs-default-skin .vjs-control-content .vjs-menu.vjs-lock-showing {\n  display: block;\n}\n/* prevent menus from opening while scrubbing (FF, IE) */\n.vjs-default-skin.vjs-scrubbing .vjs-menu-button:hover .vjs-control-content .vjs-menu {\n  display: none;\n}\n.vjs-default-skin .vjs-menu-button ul li {\n  list-style: none;\n  margin: 0;\n  padding: 0.3em 0 0.3em 0;\n  line-height: 1.4em;\n  font-size: 1.2em;\n  text-align: center;\n  text-transform: lowercase;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected {\n  background-color: #000;\n}\n.vjs-default-skin .vjs-menu-button ul li:focus,\n.vjs-default-skin .vjs-menu-button ul li:hover,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:focus,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:hover {\n  outline: 0;\n  color: #111;\n  /* background-color-with-alpha */\n  background-color: #ffffff;\n  background-color: rgba(255, 255, 255, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-menu-title {\n  text-align: center;\n  text-transform: uppercase;\n  font-size: 1em;\n  line-height: 2em;\n  padding: 0;\n  margin: 0 0 0.3em 0;\n  font-weight: bold;\n  cursor: default;\n}\n/* Subtitles Button */\n.vjs-default-skin .vjs-subtitles-button:before {\n  content: \"\\e00c\";\n}\n/* Captions Button */\n.vjs-default-skin .vjs-captions-button:before {\n  content: \"\\e008\";\n}\n/* Chapters Button */\n.vjs-default-skin .vjs-chapters-button:before {\n  content: \"\\e00c\";\n}\n.vjs-default-skin .vjs-chapters-button.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 24em;\n  left: -12em;\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-captions-button:focus .vjs-control-content:before,\n.vjs-default-skin .vjs-captions-button:hover .vjs-control-content:before {\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n/*\nREQUIRED STYLES (be careful overriding)\n================================================================================\nWhen loading the player, the video tag is replaced with a DIV,\nthat will hold the video tag or object tag for other playback methods.\nThe div contains the video playback element (Flash or HTML5) and controls,\nand sets the width and height of the video.\n\n** If you want to add some kind of border/padding (e.g. a frame), or special\npositioning, use another containing element. Otherwise you risk messing up\ncontrol positioning and full window mode. **\n*/\n.video-js {\n  background-color: #000;\n  position: relative;\n  padding: 0;\n  /* Start with 10px for base font size so other dimensions can be em based and\n     easily calculable. */\n  font-size: 10px;\n  /* Allow poster to be vertically aligned. */\n  vertical-align: middle;\n  /*  display: table-cell; */\n  /*This works in Safari but not Firefox.*/\n  /* Provide some basic defaults for fonts */\n  font-weight: normal;\n  font-style: normal;\n  /* Avoiding helvetica: issue #376 */\n  font-family: Arial, sans-serif;\n  /* Turn off user selection (text highlighting) by default.\n     The majority of player components will not be text blocks.\n     Text areas will need to turn user selection back on. */\n  /* user-select */\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n/* Playback technology elements expand to the width/height of the containing div\n    <video> or <object> */\n.video-js .vjs-tech {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n/* Fix for Firefox 9 fullscreen (only if it is enabled). Not needed when\n   checking fullScreenEnabled. */\n.video-js:-moz-full-screen {\n  position: absolute;\n}\n/* Fullscreen Styles */\nbody.vjs-full-window {\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  /* Fix for IE6 full-window. http://www.cssplay.co.uk/layouts/fixed.html */\n  overflow-y: auto;\n}\n.video-js.vjs-fullscreen {\n  position: fixed;\n  overflow: hidden;\n  z-index: 1000;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  right: 0;\n  width: 100% !important;\n  height: 100% !important;\n  /* IE6 full-window (underscore hack) */\n  _position: absolute;\n}\n.video-js:-webkit-full-screen {\n  width: 100% !important;\n  height: 100% !important;\n}\n.video-js.vjs-fullscreen.vjs-user-inactive {\n  cursor: none;\n}\n/* Poster Styles */\n.vjs-poster {\n  background-repeat: no-repeat;\n  background-position: 50% 50%;\n  background-size: contain;\n  background-color: #000000;\n  cursor: pointer;\n  margin: 0;\n  padding: 0;\n  position: absolute;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.vjs-poster img {\n  display: block;\n  margin: 0 auto;\n  max-height: 100%;\n  padding: 0;\n  width: 100%;\n}\n/* Hide the poster after the video has started playing */\n.video-js.vjs-has-started .vjs-poster {\n  display: none;\n}\n/* Don't hide the poster if we're playing audio */\n.video-js.vjs-audio.vjs-has-started .vjs-poster {\n  display: block;\n}\n/* Hide the poster when controls are disabled because it's clickable\n    and the native poster can take over */\n.video-js.vjs-controls-disabled .vjs-poster {\n  display: none;\n}\n/* Hide the poster when native controls are used otherwise it covers them */\n.video-js.vjs-using-native-controls .vjs-poster {\n  display: none;\n}\n/* Text Track Styles */\n/* Overall track holder for both captions and subtitles */\n.video-js .vjs-text-track-display {\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 3em;\n  right: 0;\n  pointer-events: none;\n}\n/* Captions Settings Dialog */\n.vjs-caption-settings {\n  position: relative;\n  top: 1em;\n  background-color: #000;\n  opacity: 0.75;\n  color: #FFF;\n  margin: 0 auto;\n  padding: 0.5em;\n  height: 15em;\n  font-family: Arial, Helvetica, sans-serif;\n  font-size: 12px;\n  width: 40em;\n}\n.vjs-caption-settings .vjs-tracksettings {\n  top: 0;\n  bottom: 2em;\n  left: 0;\n  right: 0;\n  position: absolute;\n  overflow: auto;\n}\n.vjs-caption-settings .vjs-tracksettings-colors,\n.vjs-caption-settings .vjs-tracksettings-font {\n  float: left;\n}\n.vjs-caption-settings .vjs-tracksettings-colors:after,\n.vjs-caption-settings .vjs-tracksettings-font:after,\n.vjs-caption-settings .vjs-tracksettings-controls:after {\n  clear: both;\n}\n.vjs-caption-settings .vjs-tracksettings-controls {\n  position: absolute;\n  bottom: 1em;\n  right: 1em;\n}\n.vjs-caption-settings .vjs-tracksetting {\n  margin: 5px;\n  padding: 3px;\n  min-height: 40px;\n}\n.vjs-caption-settings .vjs-tracksetting label {\n  display: block;\n  width: 100px;\n  margin-bottom: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting span {\n  display: inline;\n  margin-left: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting > div {\n  margin-bottom: 5px;\n  min-height: 20px;\n}\n.vjs-caption-settings .vjs-tracksetting > div:last-child {\n  margin-bottom: 0;\n  padding-bottom: 0;\n  min-height: 0;\n}\n.vjs-caption-settings label > input {\n  margin-right: 10px;\n}\n.vjs-caption-settings input[type=\"button\"] {\n  width: 40px;\n  height: 40px;\n}\n/* Hide disabled or unsupported controls */\n.vjs-hidden {\n  display: none !important;\n}\n.vjs-lock-showing {\n  display: block !important;\n  opacity: 1;\n  visibility: visible;\n}\n/*  In IE8 w/ no JavaScript (no HTML5 shim), the video tag doesn't register.\n    The .video-js classname on the video tag also isn't considered.\n    This optional paragraph inside the video tag can provide a message to users\n    about what's required to play video. */\n.vjs-no-js {\n  padding: 2em;\n  color: #ccc;\n  background-color: #333;\n  font-size: 1.8em;\n  font-family: Arial, sans-serif;\n  text-align: center;\n  width: 30em;\n  height: 15em;\n  margin: 0 auto;\n}\n.vjs-no-js a,\n.vjs-no-js a:visited {\n  color: #F4A460;\n}\n/* -----------------------------------------------------------------------------\nThe original source of this file lives at\nhttps://github.com/videojs/video.js/blob/master/src/css/video-js.less */\n.player {\n  background-color: red;\n  border: 2px solid red;\n}\n#vjs-form-overlay {\n  position: relative;\n  background-color: #9ba9b3;\n  width: 30%;\n  height: 30%;\n  color: #000;\n  font-size: 12px;\n}\n#vjs-form-overlay form {\n  display: table;\n}\n#vjs-form-overlay p {\n  display: table-row;\n}\n#vjs-form-overlay label {\n  display: table-cell;\n  padding-right: 12px;\n}\n#vjs-form-overlay input {\n  display: table-cell;\n}\n.hide-el {\n  display: none;\n}\n.show-el {\n  display: block;\n}\n", ""]);
 
 /***/ },
-/* 65 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = "data:application/font-woff;base64,d09GRk9UVE8AAAnMAAsAAAAADWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABDRkYgAAABCAAABokAAAgsXGkfVUZGVE0AAAeUAAAAHAAAABxxb8IrR0RFRgAAB7AAAAAiAAAAJgAnADxPUy8yAAAH1AAAAEMAAABgVDdTq2NtYXAAAAgYAAAAVgAAAWr6rrHraGVhZAAACHAAAAAsAAAANgaEyq9oaGVhAAAInAAAABwAAAAkCSAFLWhtdHgAAAi4AAAAJwAAAEgr1gKfbWF4cAAACOAAAAAGAAAABgAWUABuYW1lAAAI6AAAANUAAAGk8SNjJXBvc3QAAAnAAAAADAAAACAAAwAAeJxlVX9MW9cVvhf88K0Bt2txSTfLxNsSqkZaITjdgrZ2KaZiWYaI47lkCYTgphB+mFB+xFgZJDamqa+TAH4EkoDVNKRA3eF2UEqaJqHENKiVUAJI2zrSLkWZNO2P/dPqPnyg2r2A00zTue87737nfee943vuNUYqFcIYk8P2muqaGgfCcQijXCUDKZlY2RqnZMUrG1Q0KZ4mqQwa9Eij7VlKH9wkqWmuXiqOWiU9TnhUj9Bjepz5Az1K0qv3Po6eEqnikYQISkaPo1SkR0a0GW1BGWgbykYvIDP6DcpHe1AhKkKl6BC3KlTXkNGQ2bA1oyE3I2MVMgVsFZAlwCRgm4DnBPxcwC8EbBewQ8CLAnIEmAXkcshchZcacp/jCX+WsV5srGaE8Ov4JH4D+zDFfnwKn8ZncDvuwJ04gGXchc/ibtyDz+Hz+AJ6MlaVGmnQU+hptINXUYiq0S30Bb6Jb8d1xL0Z96/4syqN6j+SVVKoVpgia6Ny1KrbqAHTikln1GiZdWlet5SynLLCL0nLUviUza/IMJ+gWJfk2L1W2RSVdD/WaJUrrEb3Ew08vfSMmC69wlJ0P9XAC/98iIzOR7Xv61poc7tbdgbpUDC4uHiVEcoe42MfI1mLa2wwOESDTvKtcQo2UniGj92w0Wh0u5vbWiiB5+//X2ZFfDzML8ts9VJkSbu68CqO353XR99K0KvuKhd0PpbX+kXJZGv3sc4W+eAQ7D0LTRScFOzHS6tb3Mda3S2lVu8vT0IeOQ15Hb8a3SM3n/d2e0Yrmf0Ec77Bmk6xvV0fhLoD5zs6e8Zudv7Nz/LI8t8/0h1nxl9/CT/kn/foFoiHXHhpEeLZpjRe3sI/upmRgCGh7eUG+35KXmye++u3Q59cTxungxVnLESJPtnCjDu+hB9xtXZd/fX36p41tZeri/5HPVDRbiFrS7Mkr3DjyyEm5ohldjYSmZ21RMxmi8VsYP2gWmXvTEVm7+yeyjVbducamBn6deWDjuHhwcHhYcdgebnDUW4AlWAHHGHBhh0D5WU1NWUGEBmoOva0gVL194p+FouFB9Zi4ZqBsnIH11UqozxkGyuZmBgbmxChiZIxm62kxGbI4u+xhypHRkKhkZHKkN1eWWk3aBWrksLbMFqv1Is25AubomNh1gT54OImfDjtCD1yqvY0xHFLPQpPnCRvq2//6dNpeod2+WRfF5C/7BBtlUqYizWxfBY2rHdImCdo4igSNvG03LNVz2ecTwNZxYxMDWowcnvgmZqznBc+jU0tT+mytwMuBjUVA49n392+UMwwZWo+xhm+u0Bm8iiVIBVSKVQw7j7f9VX5fXqffjX8+WcslaVSVgHckZkZ6W72OODVTOpiwNuziXbpGybrimmp01FNlnNYleQP+ANUprIv4AsQRTCD1aPOcUoW5+YWF3PmsrJycrLSqNvv8Xu4Aqokx1BpsJgSwWfN5SzybhkNDg5xLY/5PD4PdRPBx/QGvv8Vq843c2zmyK3a6Vdu7hvff8USzr+Uf2nn2Z2+nb7f/rGgtqD294cOFJEDReXW+oL6guO7/NzO/a7f0m957+UPS8ZLJioiDZH66RPTfjLtv3Vu8tLkpWvDox9+MBa6fnGy5115+EyYnEkYHhwIp7WrN8Hzunrb4X0H7Qftf6iyNdoaLW6L3+Lf01N4sfCt/e8eGjk0Un316HVy9Ib7E/+kf7J74uK1ix+Hxv/83vvhK4MfB68FJ+Qbvgnf9ZarjeSjxrGq4VfDr759ILivb3+g0LeXUErbJFrRXxM66S0/cfhYJVnvghCFRqhrhaEO1sZ2MRtrpKJT8qEIaKxVH7TEd7wlQpQ1srpONuSFNtgFNuAC3oz5rIjRWD/HeiqN/5LsGx1lVkjvl7x9rb2eXnKPJYOe6SF5m+QKuALODlLHNoOV1sFmyel1eVweAsn3QA/6e5AseVytLm8TgfTXKFhZ+mtSR1OnS3YREyTzHHqm/Vq64On19HlJP6QzK+1n6VJfR2/gQoAwrYnxF5lYsiT3dvZ29JFl3KozWyJrB0LEsnogiG9MoTqapOF/hk8gCeMNGQWeG3TZBCZmAitYt/ybWXkFfCYlijlnTcsmShURN4mYlHj58ptuWkZWbqtpWaO79jIBL/OCeCiFmaiU+PBBv7BA2YbshYfPd6aBRF4fcEfWj/bEZtrS7u5y9tF3gn0P7ZI1oi/4Du1zxnYLiW0X94mWVe1/AVE82XMAAAAAAAABAAAAANDR138AAAAAz5mnxQAAAADRBELmeJxjYGRgYOABYjEGOQYmBkYgFAViFqAIExAzQjAACdkAZAAAeJxjYGb+xTiBgZWBgWkm0xkGBoZ+CM34msGYkZMBFTAKIHEC0lxTGBwYGJ8xMB/4f4ABSAJ5QDVwBQpAyAgAobYMfwB4nGNgYGBmgGAZBkYGEEgB8hjBfBYGDyDNx8DBwMTABhRTeMD3QP4Zw/+///+DVSo8YHggB+Uz/n+swCL/VUoUqhsFMLIBMRO6KCpgxi895AEAetoSOQAAeJxjYGQAg2MiZgnx/DZfGbhZwPyLLM4yCPr/LtY45gNALgcDE0gUAOkeCHF4nGNgZGBgPvD/AAMDaxwDA5hkZEAFfABctgNZeJxjYEAAJiBmgeADQNzAguAzsDhAxFnjwHQDgwVcmzyIAABxXQOhAAAAUAAAFgAAeJx1zT0KwjAcBfDXL8UKIiguLh0FoVg8goMU6eLg4tTWIAVtIOpQPIBHcPQ2grfy1f4dG0j6y0tfAmCINyz8hy220MVIbNNzsUOvxC69F3vo4y7uMH+KfYzxYctye/JCYwsDqrFNT8UOvRS79EbsYYJc3GH+EPuY4VVfW/BY48ypUXKb67PWxBYKR9xwQgrDrTreTqlp/78t3/EegwvP6zxAhBALxspcCl0GUbho767ZLX/9FFd+D+xnqLjGv0byb6xVqUx6VYcgq4I410ld/wJ2ozpzAAAAeJxjYGbACwAAfQAE"
 
 /***/ },
-/* 66 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24055,25 +27892,25 @@
 
 
 /***/ },
-/* 67 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "062f06670a3b82ffb0732701c9d1e098.eot"
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "0bfbb17e6e700d4815bc405d9fb8d65a.ttf"
 
 /***/ },
-/* 69 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "17371a8f614b03b01b31a94d43cab2c4.svg"
 
 /***/ },
-/* 70 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24298,18 +28135,19 @@
 
 
 /***/ },
-/* 71 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";var vjs=__webpack_require__(6);vjs.Chart=vjs.Button.extend({init:function(t,o){vjs.Button.call(this,t,o)}}),vjs.Chart.prototype.buttonText="button text",vjs.Chart.prototype.options_={},vjs.Chart.prototype.buildCSSClass=function(){return"vjs-chart"+vjs.Button.prototype.buildCSSClass.call(this)},vjs.Chart.prototype.onClick=function(t){alert("a")};
 	//# sourceMappingURL=out.map.js
 
 /***/ },
-/* 72 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";var vjs=__webpack_require__(6);vjs.formPoll=vjs.Component.extend({init:function(e,t){vjs.Component.call(this,e,t)}}),vjs.formPoll.prototype.options_={},vjs.formPoll.prototype.buildCSSClass=function(){return"vjs-poll-form"+vjs.Button.prototype.buildCSSClass.call(this)},videojs.formPoll.prototype.createEl=function(e,t){var l=videojs.createEl("div",{className:"hide-el",id:"vjs-form-overlay"}),o="<fieldset><legend> Question to ask </legend>";o+='<p><label for="question">Question: </label>',o+='<input type="text" name="question" id="question" value=""></p></fieldset>',o+="<fieldset><legend> Possible answers </legend>",o+='<p><label for="alt_1">Alternative 1: </label>',o+='<input type="text" name="question" id="alt_1" value=""></p>',o+='<p><label for="alt_2">Alternative 2: </label>',o+='<input type="text" name="question" id="alt_2" value=""></p></fieldset>',o+='<p><input type="button" value="Submit" onClick="sendPoll()"></p>';var i=videojs.createEl("form",{className:"vjs-form",innerHTML:o});return l.appendChild(i),l};
+	/* WEBPACK VAR INJECTION */(function(videojs) {"use strict";var vjs=__webpack_require__(6);vjs.formPoll=vjs.Component.extend({init:function(e,t){vjs.Component.call(this,e,t)}}),vjs.formPoll.prototype.options_={},vjs.formPoll.prototype.buildCSSClass=function(){return"vjs-poll-form"+vjs.Button.prototype.buildCSSClass.call(this)},videojs.formPoll.prototype.createEl=function(e,t){var l=videojs.createEl("div",{className:"hide-el",id:"vjs-form-overlay"}),o="<fieldset><legend> Question to ask </legend>";o+='<p><label for="question">Question: </label>',o+='<input type="text" name="question" id="question" value=""></p></fieldset>',o+="<fieldset><legend> Possible answers </legend>",o+='<p><label for="alt_1">Alternative 1: </label>',o+='<input type="text" name="question" id="alt_1" value=""></p>',o+='<p><label for="alt_2">Alternative 2: </label>',o+='<input type="text" name="question" id="alt_2" value=""></p></fieldset>',o+='<p><input type="button" value="Submit" onClick="sendPoll()"></p>';var i=videojs.createEl("form",{className:"vjs-form",innerHTML:o});return l.appendChild(i),l};
 	//# sourceMappingURL=out.map.js
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ }
 /******/ ]);
