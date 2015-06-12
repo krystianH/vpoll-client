@@ -4,13 +4,13 @@ let vjs = require('video.js');
 
 vjs.FormPoll = vjs.Component.extend({
   init(player, options) {
-    vjs.Component.call( this, player, options);
+    vjs.Component.call(this, player, options);
   },
   buildCSSClass() {
-    return 'vjs-poll-form' + vjs.Button.prototype.buildCSSClass.call(this);
+    return 'vjs-poll-form ' + vjs.Button.prototype.buildCSSClass.call(this);
   },
   createEl(type, props) {
-    let overlay = videojs.createEl('div', {
+    let overlay = vjs.createEl('div', {
       className: 'hide-el',
       id: 'vjs-form-overlay'
     });
@@ -25,7 +25,7 @@ vjs.FormPoll = vjs.Component.extend({
       <input type="text" name="question" id="alt_2" value=""></p></fieldset>
       <p><input type="button" value="Submit" onClick="sendPoll()"></p>`;
 
-    let form = videojs.createEl('form', {
+    let form = vjs.createEl('form', {
       className: 'vjs-form',
       innerHTML: formElements
     });
