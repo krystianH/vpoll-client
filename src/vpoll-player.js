@@ -35,12 +35,14 @@ export default function vPollPlayer(elementId, options) {
 };
 
 
+// Poll form calls on this function onSubmit 
 window.sendPoll = function() {
 	console.log("No logic for sending implemented .... hiding poll");
 	document.getElementById("vjs-form-overlay").className = "hide-el";
 
 }
 
+// Called in order to display the poll form 
 window.askPoll = function() {
 	console.log("Showing poll form");
 	document.getElementById("vjs-form-overlay").className = "show-el";
