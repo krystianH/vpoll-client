@@ -14,4 +14,54 @@
   input { display: table-cell; }
 }
 
-.hide-el { display: none; }
+.close-thick {
+  color: #777;
+  font: 18px/100% arial, sans-serif;
+  position: absolute;
+  left: 0px;
+  text-decoration: none;
+  text-shadow: 0 1px 0 #fff;
+  top: 0px;
+}
+
+.close-thick:after {
+  content: '✖'; /* UTF-8 symbol */
+}
+
+.close-thick:hover {
+  cursor: pointer;
+}
+
+/* Dialog */
+.vpoll-chart-component {
+  background: #FFF;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  margin: 20px;
+  position: absolute;
+  width: 190px;
+  padding-left: 6px;
+  padding-top: 20px;
+  right: 0;
+  bottom: 15%;
+  opacity: 0.8;
+  max-height: 1000px; //max-height for transition, since height 0<->auto doesnt work
+  transition: 3s max-height;
+  overflow: hidden;
+
+  &.hidden {
+    opacity: 0;
+    max-height: 0;
+  }
+}
+
+.poll-title {
+  margin: 3px 0 5px 0;
+  font-size: 14px;
+  color:#858586;
+}
+
+.poll-chart {
+  width: 200px;
+  height: 200px;
+}

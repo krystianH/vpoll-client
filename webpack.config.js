@@ -17,7 +17,7 @@ module.exports = {
   },
   module: {
     loaders: [
-      { test: /\.js$/, exclude: /(node_modules)|(vendor)/, loader: 'uglify!babel?optional[]=runtime' },
+      { test: /\.js$/, exclude: /(node_modules)|(vendor)/, loader: 'babel?optional[]=runtime' },
       { test: [/videojs-contrib-media-sources/, /videojs\.hls/], loader: 'imports?this=>window' },
       { test: /\.less$/, loader: 'style-loader!css-loader!autoprefixer-loader!less-loader' },
       { test: /\.(png|jpg)$/, loader: 'url-loader?limit=8192' },
