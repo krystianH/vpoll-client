@@ -27,17 +27,36 @@
 
   <script type="text/javascript">
 
-   document.addEventListener("DOMContentLoaded", function(event) {
-	    window.player.ready(function(){
-	      
-	     	var formOverlay = player.createEl('div', {
-	            	className: 'vjs-form-overlay',
-	            	innerHtml: '<p>Tjena!</p>'
-	        });
+  document.addEventListener("DOMContentLoaded", function(event) {
+    window.player.ready(function(){
+      
+     	videojs.FormOverlay = videojs.Component.extend({
+	        init: function(player, options) {
+	            // call the parent constructor
+	            videojs.Component.call(this, player, {} );
 
-	        player.addChild(formOverlay);
+	        }
+    	});
 
-	    });
+      	videojs.FormOverlay.prototype.createEl = function(tagName, props) {
+        
+        	var overlay = videojs.createEl('div', {
+            	className: 'vjs-form-overlay',
+            	innerHtml: '<p>Tjeeeena!</p>'
+        	});
+
+        	return this; 
+
+      	};
+
+      	videojs.FormOverlay.prototype.show = function() {
+      		this.el_.style.opacity = '1';
+      	}
+
+      	player.addChild(videojs.FormOverlay);
+
+    });
+
 	});
   </script>
 
