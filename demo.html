@@ -30,30 +30,12 @@
    document.addEventListener("DOMContentLoaded", function(event) {
 	    window.player.ready(function(){
 	      
-	     	videojs.FormOverlay = videojs.Component.extend({
-		        init: function(player, options) {
-		            // call the parent constructor
-		            videojs.Component.call(this, player, {} );
-
-		        }
-	    	});
-
-	      	videojs.FormOverlay.prototype.createEl = function(tagName, props) {
-	        
-	        	var overlay = videojs.createEl('div', {
+	     	var formOverlay = player.createEl('div', {
 	            	className: 'vjs-form-overlay',
 	            	innerHtml: '<p>Tjena!</p>'
-	        	});
+	        });
 
-	        	return this; 
-
-	      	};
-
-	      	videojs.FormOverlay.prototype.show = function() {
-	      		this.el_.style.opacity = '1';
-	      	}
-
-	      	window.player.addChild(new videojs.FormOverlay());
+	        player.addChild(formOverlay);
 
 	    });
 	});
