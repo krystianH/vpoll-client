@@ -33,6 +33,7 @@
     "uglify-loader": "^1.2.0",
     "url-loader": "^0.5.6",
     "video.js": "4.12.7",
-    "webpack": "^1.9.10"
+    "webpack": "^1.9.10",
+    "chart-js": "git+ssh://git@github.com:nnnick/Chart.js.git#v1.0.2"
   }
 }
