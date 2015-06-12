@@ -1,10 +1,17 @@
-// import Video.js less here
 @import '../node_modules/video.js/dist/video-js/video-js.less';
 
-// just some test LESS
-.player {
-  background-color: red;
-  border: 2px solid red;
+.vpoll-form-overlay {
+  position: relative;
+  background-color: rgb(155, 169, 179);
+  width: 30%;
+  height: 30%;
+  color: #000;
+  font-size: 12px;
+
+  form { display: table; }
+  p { display: table-row; }
+  label { display: table-cell; padding-right: 12px }
+  input { display: table-cell; }
 }
 
 .close-thick {
@@ -59,3 +66,4 @@
 	height: 200px;
 }
 
+.hide-el { display: none; }
