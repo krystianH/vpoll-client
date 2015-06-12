@@ -3,7 +3,9 @@
 require('./vpoll-player.less');
 
 import vjs from 'video.js';
+import hls from 'videojs-contrib-hls';
 import io from 'socket.io-client';
+
 
 window.vjs = window.vjs || vjs;
 window.videojs = window.videojs || vjs;
@@ -18,3 +20,5 @@ export default function vPollPlayer(elementId, options) {
 
 	return vjs(elementId, options);
 };
+
+
