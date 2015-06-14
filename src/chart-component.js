@@ -8,7 +8,7 @@ vjs.Chart = vjs.Component.extend({
   },
   createEl: function(tagName, props) {
     let container = vjs.createEl('div', { className: 'vpoll-chart-component hidden' });
-    let title = vjs.createEl('h3', { className: 'poll-title' });
+    let title = this.titleEl = vjs.createEl('h3', { className: 'poll-title' });
     let canvas = vjs.createEl('canvas', { className: 'poll-chart', id: 'pollChart' })
     let closeButton = vjs.createEl('div', { className: 'close-thick' });
 
@@ -20,5 +20,14 @@ vjs.Chart = vjs.Component.extend({
 
     this.contentEl_ = container;
     return container;
+  },
+  hide: function() {
+    this.addClass('hidden');
+  },
+  show: function() {
+    this.removeClass('hidden');
+  },
+  setTitle: function(title) {
+    this.titleEl.text = title;
   }
 });
