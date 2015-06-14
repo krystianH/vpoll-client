@@ -12,7 +12,7 @@ vjs.Chart = vjs.Component.extend({
     let canvas = vjs.createEl('canvas', { className: 'poll-chart', id: 'pollChart' })
     let closeButton = vjs.createEl('div', { className: 'close-thick' });
 
-    closeButton.onclick = () => container.className += " hidden";
+    closeButton.onclick = () => this.hide();
 
     container.appendChild(title);
     container.appendChild(canvas);
