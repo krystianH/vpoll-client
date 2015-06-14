@@ -46,9 +46,9 @@
 
 	'use strict';
 
-	var _Object$defineProperty = __webpack_require__(5)['default'];
+	var _Object$defineProperty = __webpack_require__(1)['default'];
 
-	var _interopRequireDefault = __webpack_require__(9)['default'];
+	var _interopRequireDefault = __webpack_require__(5)['default'];
 
 	_Object$defineProperty(exports, '__esModule', {
 	  value: true
@@ -56,27 +56,31 @@
 
 	exports['default'] = vPollPlayer;
 
-	var _videoJs = __webpack_require__(2);
+	var _videoJs = __webpack_require__(6);
 
 	var _videoJs2 = _interopRequireDefault(_videoJs);
 
-	var _videojsContribHls = __webpack_require__(10);
+	var _videojsContribHls = __webpack_require__(9);
 
 	var _videojsContribHls2 = _interopRequireDefault(_videojsContribHls);
 
-	var _socketIoClient = __webpack_require__(11);
+	var _socketIoClient = __webpack_require__(10);
 
 	var _socketIoClient2 = _interopRequireDefault(_socketIoClient);
 
-	var _barchart = __webpack_require__(63);
+	var _barchart = __webpack_require__(62);
 
-	__webpack_require__(1);
+	var _nodeUuid = __webpack_require__(64);
 
-	__webpack_require__(10);
+	var _nodeUuid2 = _interopRequireDefault(_nodeUuid);
 
 	__webpack_require__(65);
-	__webpack_require__(73);
+
+	__webpack_require__(9);
+
+	__webpack_require__(66);
 	__webpack_require__(74);
+	__webpack_require__(75);
 
 	window.vPollPlayer = vPollPlayer;
 
@@ -84,6 +88,7 @@
 	  if (!options.socketUrl) throw new Error('options.socketUrl needs to be specified');
 
 	  var player = (0, _videoJs2['default'])(elementId, options);
+	  var clientID = _nodeUuid2['default'].v4(); // TODO: this should be persisted and reused in localStorage or similar
 
 	  var chartComponent = new _videoJs2['default'].Chart(player, {});
 	  player.addChild(chartComponent);
@@ -105,11 +110,32 @@
 	    }
 	  });
 
-	  __webpack_require__(75)(barChart, chartComponent); //for chart testing
+	  __webpack_require__(76)(barChart, chartComponent); //for chart testing
 
 	  // Poll form calls on this function onSubmit
-	  window.sendPoll = function () {
-	    console.log('No logic for sending implemented .... hiding poll');
+	  window.sendPoll = function (_ref) {
+	    var question = _ref.question;
+	    var alternatives = _ref.alternatives;
+
+	    socket.emit('message', {
+	      clientID: clientID,
+	      messageID: _nodeUuid2['default'].v4(),
+	      pollId: _nodeUuid2['default'].v4(),
+	      type: 'createPoll',
+	      startTime: null,
+	      stopTime: null,
+	      title: question,
+	      queries: [{
+	        id: '1',
+	        text: alternatives[0],
+	        type: 'button'
+	      }, {
+	        id: '2',
+	        text: alternatives[1],
+	        type: 'button'
+	      }]
+	    });
+
 	    pollComponent.addClass('vjs-hidden');
 	  };
 
@@ -129,306 +155,144 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(videojs) {/*** IMPORTS FROM imports-loader ***/
-	(function() {
-
-	(function(window){
-	  var urlCount = 0,
-	      NativeMediaSource = window.MediaSource || window.WebKitMediaSource || {},
-	      nativeUrl = window.URL || {},
-	      EventEmitter,
-	      flvCodec = /video\/flv(;\s*codecs=["']vp6,aac["'])?$/,
-	      objectUrlPrefix = 'blob:vjs-media-source/';
-
-	  EventEmitter = function(){};
-	  EventEmitter.prototype.init = function(){
-	    this.listeners = [];
-	  };
-	  EventEmitter.prototype.addEventListener = function(type, listener){
-	    if (!this.listeners[type]){
-	      this.listeners[type] = [];
-	    }
-	    this.listeners[type].unshift(listener);
-	  };
-	  EventEmitter.prototype.removeEventListener = function(type, listener){
-	    var listeners = this.listeners[type],
-	        i = listeners.length;
-	    while (i--) {
-	      if (listeners[i] === listener) {
-	        return listeners.splice(i, 1);
-	      }
-	    }
-	  };
-	  EventEmitter.prototype.trigger = function(event){
-	    var listeners = this.listeners[event.type] || [],
-	        i = listeners.length;
-	    while (i--) {
-	      listeners[i](event);
-	    }
-	  };
-
-	  // extend the media source APIs
-
-	  // Media Source
-	  videojs.MediaSource = function(){
-	    var self = this;
-	    videojs.MediaSource.prototype.init.call(this);
-
-	    this.sourceBuffers = [];
-	    this.readyState = 'closed';
-	    this.listeners = {
-	      sourceopen: [function(event){
-	        // find the swf where we will push media data
-	        self.swfObj = document.getElementById(event.swfId);
-	        self.readyState = 'open';
-
-	        // trigger load events
-	        if (self.swfObj) {
-	          self.swfObj.vjs_load();
-	        }
-	      }],
-	      webkitsourceopen: [function(event){
-	        self.trigger({
-	          type: 'sourceopen'
-	        });
-	      }]
-	    };
-	  };
-	  videojs.MediaSource.prototype = new EventEmitter();
-
-	  /**
-	   * The maximum size in bytes for append operations to the video.js
-	   * SWF. Calling through to Flash blocks and can be expensive so
-	   * tuning this parameter may improve playback on slower
-	   * systems. There are two factors to consider:
-	   * - Each interaction with the SWF must be quick or you risk dropping
-	   * video frames. To maintain 60fps for the rest of the page, each append
-	   * cannot take longer than 16ms. Given the likelihood that the page will
-	   * be executing more javascript than just playback, you probably want to
-	   * aim for ~8ms.
-	   * - Bigger appends significantly increase throughput. The total number of
-	   * bytes over time delivered to the SWF must exceed the video bitrate or
-	   * playback will stall.
-	   *
-	   * The default is set so that a 4MB/s stream should playback
-	   * without stuttering.
-	   */
-	  videojs.MediaSource.BYTES_PER_SECOND_GOAL = 4 * 1024 * 1024;
-	  videojs.MediaSource.TICKS_PER_SECOND = 60;
-
-	  // create a new source buffer to receive a type of media data
-	  videojs.MediaSource.prototype.addSourceBuffer = function(type){
-	    var sourceBuffer;
-
-	    // if this is an FLV type, we'll push data to flash
-	    if (flvCodec.test(type)) {
-	      // Flash source buffers
-	      sourceBuffer = new videojs.SourceBuffer(this);
-	    } else if (this.nativeSource) {
-	      // native source buffers
-	      sourceBuffer = this.nativeSource.addSourceBuffer.apply(this.nativeSource, arguments);
-	    } else {
-	      throw new Error('NotSupportedError (Video.js)');
-	    }
-
-	    this.sourceBuffers.push(sourceBuffer);
-	    return sourceBuffer;
-	  };
-	  videojs.MediaSource.prototype.endOfStream = function(){
-	    this.readyState = 'ended';
-	  };
-
-	  // store references to the media sources so they can be connected
-	  // to a video element (a swf object)
-	  videojs.mediaSources = {};
-	  // provide a method for a swf object to notify JS that a media source is now open
-	  videojs.MediaSource.open = function(msObjectURL, swfId){
-	    var mediaSource = videojs.mediaSources[msObjectURL];
-
-	    if (mediaSource) {
-	      mediaSource.trigger({
-	        type: 'sourceopen',
-	        swfId: swfId
-	      });
-	    } else {
-	      throw new Error('Media Source not found (Video.js)');
-	    }
-	  };
-
-	  // Source Buffer
-	  videojs.SourceBuffer = function(source){
-	    var self = this,
-
-	        // byte arrays queued to be appended
-	        buffer = [],
-
-	        // the total number of queued bytes
-	        bufferSize = 0,
-	        scheduleTick = function(func) {
-	          // Chrome doesn't invoke requestAnimationFrame callbacks
-	          // in background tabs, so use setTimeout.
-	          window.setTimeout(func,
-	                            Math.ceil(1000 / videojs.MediaSource.TICKS_PER_SECOND));
-	        },
-	        append = function() {
-	          var chunk, i, length, payload, maxSize,
-	              binary = '';
-
-	          if (!buffer.length) {
-	            // do nothing if the buffer is empty
-	            return;
-	          }
-
-	          if (document.hidden) {
-	            // When the document is hidden, the browser will likely
-	            // invoke callbacks less frequently than we want. Just
-	            // append a whole second's worth of data. It doesn't
-	            // matter if the video janks, since the user can't see it.
-	            maxSize = videojs.MediaSource.BYTES_PER_SECOND_GOAL;
-	          } else {
-	            maxSize = Math.ceil(videojs.MediaSource.BYTES_PER_SECOND_GOAL/
-	                                videojs.MediaSource.TICKS_PER_SECOND);
-	          }
-
-	          // concatenate appends up to the max append size
-	          payload = new Uint8Array(Math.min(maxSize, bufferSize));
-	          i = payload.byteLength;
-	          while (i) {
-	            chunk = buffer[0].subarray(0, i);
-
-	            payload.set(chunk, payload.byteLength - i);
-
-	            // requeue any bytes that won't make it this round
-	            if (chunk.byteLength < buffer[0].byteLength) {
-	              buffer[0] = buffer[0].subarray(i);
-	            } else {
-	              buffer.shift();
-	            }
-
-	            i -= chunk.byteLength;
-	          }
-	          bufferSize -= payload.byteLength;
-
-	          // base64 encode the bytes
-	          for (i = 0, length = payload.byteLength; i < length; i++) {
-	            binary += String.fromCharCode(payload[i]);
-	          }
-	          b64str = window.btoa(binary);
-
-	          // bypass normal ExternalInterface calls and pass xml directly
-	          // IE can be slow by default
-	          self.source.swfObj.CallFunction('<invoke name="vjs_appendBuffer"' +
-	                                          'returntype="javascript"><arguments><string>' +
-	                                          b64str +
-	                                          '</string></arguments></invoke>');
-
-	          // schedule another append if necessary
-	          if (bufferSize !== 0) {
-	            scheduleTick(append);
-	          } else {
-	            self.updating = false;
-	            self.trigger({ type: 'updateend' });
-
-	            if (self.source.readyState === 'ended') {
-	              self.source.swfObj.vjs_endOfStream();
-	            }
-	          }
-	        };
-
-	    videojs.SourceBuffer.prototype.init.call(this);
-	    this.source = source;
-
-	    // indicates whether the asynchronous continuation of an operation
-	    // is still being processed
-	    // see https://w3c.github.io/media-source/#widl-SourceBuffer-updating
-	    this.updating = false;
-
-	    // accept video data and pass to the video (swf) object
-	    this.appendBuffer = function(uint8Array){
-	      var error;
-
-	      if (this.updating) {
-	        error = new Error('SourceBuffer.append() cannot be called ' +
-	                          'while an update is in progress');
-	        error.name = 'InvalidStateError';
-	        error.code = 11;
-	        throw error;
-	      }
-	      if (buffer.length === 0) {
-	        scheduleTick(append);
-	      }
-
-	      this.updating = true;
-	      this.source.readyState = 'open';
-	      this.trigger({ type: 'update' });
-
-	      buffer.push(uint8Array);
-	      bufferSize += uint8Array.byteLength;
-	    };
-
-	    // reset the parser and remove any data queued to be sent to the swf
-	    this.abort = function() {
-	      buffer = [];
-	      bufferSize = 0;
-	      this.source.swfObj.vjs_abort();
-
-	      // report any outstanding updates have ended
-	      if (this.updating) {
-	        this.updating = false;
-	        this.trigger({ type: 'updateend' });
-	      }
-
-	    };
-	  };
-	  videojs.SourceBuffer.prototype = new EventEmitter();
-
-	  // URL
-	  videojs.URL = {
-	    createObjectURL: function(object){
-	      var url = objectUrlPrefix + urlCount;
-
-	      urlCount++;
-
-	      // setup the mapping back to object
-	      videojs.mediaSources[url] = object;
-
-	      return url;
-	    }
-	  };
-
-	  // plugin
-	  videojs.plugin('mediaSource', function(options){
-	    var player = this;
-
-	    player.on('loadstart', function(){
-	      var url = player.currentSrc(),
-	          trigger = function(event){
-	            mediaSource.trigger(event);
-	          },
-	          mediaSource;
-
-	      if (player.techName === 'Html5' && url.indexOf(objectUrlPrefix) === 0) {
-	        // use the native media source implementation
-	        mediaSource = videojs.mediaSources[url];
-
-	        if (!mediaSource.nativeUrl) {
-	          // initialize the native source
-	          mediaSource.nativeSource = new NativeMediaSource();
-	          mediaSource.nativeSource.addEventListener('sourceopen', trigger, false);
-	          mediaSource.nativeSource.addEventListener('webkitsourceopen', trigger, false);
-	          mediaSource.nativeUrl = nativeUrl.createObjectURL(mediaSource.nativeSource);
-	        }
-	        player.src(mediaSource.nativeUrl);
-	      }
-	    });
-	  });
-
-	})(this);
-	}.call(window));
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
+	module.exports = { "default": __webpack_require__(2), __esModule: true };
 
 /***/ },
 /* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var $ = __webpack_require__(3);
+	module.exports = function defineProperty(it, key, desc){
+	  return $.setDesc(it, key, desc);
+	};
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	var global = typeof self != 'undefined' ? self : Function('return this')()
+	  , core   = {}
+	  , defineProperty = Object.defineProperty
+	  , hasOwnProperty = {}.hasOwnProperty
+	  , ceil  = Math.ceil
+	  , floor = Math.floor
+	  , max   = Math.max
+	  , min   = Math.min;
+	// The engine works fine with descriptors? Thank's IE8 for his funny defineProperty.
+	var DESC = !!function(){
+	  try {
+	    return defineProperty({}, 'a', {get: function(){ return 2; }}).a == 2;
+	  } catch(e){ /* empty */ }
+	}();
+	var hide = createDefiner(1);
+	// 7.1.4 ToInteger
+	function toInteger(it){
+	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+	}
+	function desc(bitmap, value){
+	  return {
+	    enumerable  : !(bitmap & 1),
+	    configurable: !(bitmap & 2),
+	    writable    : !(bitmap & 4),
+	    value       : value
+	  };
+	}
+	function simpleSet(object, key, value){
+	  object[key] = value;
+	  return object;
+	}
+	function createDefiner(bitmap){
+	  return DESC ? function(object, key, value){
+	    return $.setDesc(object, key, desc(bitmap, value));
+	  } : simpleSet;
+	}
+
+	function isObject(it){
+	  return it !== null && (typeof it == 'object' || typeof it == 'function');
+	}
+	function isFunction(it){
+	  return typeof it == 'function';
+	}
+	function assertDefined(it){
+	  if(it == undefined)throw TypeError("Can't call method on  " + it);
+	  return it;
+	}
+
+	var $ = module.exports = __webpack_require__(4)({
+	  g: global,
+	  core: core,
+	  html: global.document && document.documentElement,
+	  // http://jsperf.com/core-js-isobject
+	  isObject:   isObject,
+	  isFunction: isFunction,
+	  that: function(){
+	    return this;
+	  },
+	  // 7.1.4 ToInteger
+	  toInteger: toInteger,
+	  // 7.1.15 ToLength
+	  toLength: function(it){
+	    return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+	  },
+	  toIndex: function(index, length){
+	    index = toInteger(index);
+	    return index < 0 ? max(index + length, 0) : min(index, length);
+	  },
+	  has: function(it, key){
+	    return hasOwnProperty.call(it, key);
+	  },
+	  create:     Object.create,
+	  getProto:   Object.getPrototypeOf,
+	  DESC:       DESC,
+	  desc:       desc,
+	  getDesc:    Object.getOwnPropertyDescriptor,
+	  setDesc:    defineProperty,
+	  setDescs:   Object.defineProperties,
+	  getKeys:    Object.keys,
+	  getNames:   Object.getOwnPropertyNames,
+	  getSymbols: Object.getOwnPropertySymbols,
+	  assertDefined: assertDefined,
+	  // Dummy, fix for not array-like ES3 string in es5 module
+	  ES5Object: Object,
+	  toObject: function(it){
+	    return $.ES5Object(assertDefined(it));
+	  },
+	  hide: hide,
+	  def: createDefiner(0),
+	  set: global.Symbol ? simpleSet : hide,
+	  each: [].forEach
+	});
+	/* eslint-disable no-undef */
+	if(typeof __e != 'undefined')__e = core;
+	if(typeof __g != 'undefined')__g = global;
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function($){
+	  $.FW   = false;
+	  $.path = $.core;
+	  return $;
+	};
+
+/***/ },
+/* 5 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	exports["default"] = function (obj) {
+	  return obj && obj.__esModule ? obj : {
+	    "default": obj
+	  };
+	};
+
+	exports.__esModule = true;
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {/**
@@ -603,7 +467,7 @@
 	 * still support requirejs and browserify. This also needs to be closure
 	 * compiler compatible, so string keys are used.
 	 */
-	if ("function" === 'function' && __webpack_require__(4)['amd']) {
+	if ("function" === 'function' && __webpack_require__(8)['amd']) {
 	  !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function(){ return videojs; }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 	// checking that module is an object too because of umdjs/umd#35
@@ -12236,10 +12100,10 @@
 
 	}(this, (this.vttjs || {})));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)(module)))
 
 /***/ },
-/* 3 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -12255,154 +12119,14 @@
 
 
 /***/ },
-/* 4 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function() { throw new Error("define cannot be used indirect"); };
 
 
 /***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(6), __esModule: true };
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var $ = __webpack_require__(7);
-	module.exports = function defineProperty(it, key, desc){
-	  return $.setDesc(it, key, desc);
-	};
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var global = typeof self != 'undefined' ? self : Function('return this')()
-	  , core   = {}
-	  , defineProperty = Object.defineProperty
-	  , hasOwnProperty = {}.hasOwnProperty
-	  , ceil  = Math.ceil
-	  , floor = Math.floor
-	  , max   = Math.max
-	  , min   = Math.min;
-	// The engine works fine with descriptors? Thank's IE8 for his funny defineProperty.
-	var DESC = !!function(){
-	  try {
-	    return defineProperty({}, 'a', {get: function(){ return 2; }}).a == 2;
-	  } catch(e){ /* empty */ }
-	}();
-	var hide = createDefiner(1);
-	// 7.1.4 ToInteger
-	function toInteger(it){
-	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
-	}
-	function desc(bitmap, value){
-	  return {
-	    enumerable  : !(bitmap & 1),
-	    configurable: !(bitmap & 2),
-	    writable    : !(bitmap & 4),
-	    value       : value
-	  };
-	}
-	function simpleSet(object, key, value){
-	  object[key] = value;
-	  return object;
-	}
-	function createDefiner(bitmap){
-	  return DESC ? function(object, key, value){
-	    return $.setDesc(object, key, desc(bitmap, value));
-	  } : simpleSet;
-	}
-
-	function isObject(it){
-	  return it !== null && (typeof it == 'object' || typeof it == 'function');
-	}
-	function isFunction(it){
-	  return typeof it == 'function';
-	}
-	function assertDefined(it){
-	  if(it == undefined)throw TypeError("Can't call method on  " + it);
-	  return it;
-	}
-
-	var $ = module.exports = __webpack_require__(8)({
-	  g: global,
-	  core: core,
-	  html: global.document && document.documentElement,
-	  // http://jsperf.com/core-js-isobject
-	  isObject:   isObject,
-	  isFunction: isFunction,
-	  that: function(){
-	    return this;
-	  },
-	  // 7.1.4 ToInteger
-	  toInteger: toInteger,
-	  // 7.1.15 ToLength
-	  toLength: function(it){
-	    return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
-	  },
-	  toIndex: function(index, length){
-	    index = toInteger(index);
-	    return index < 0 ? max(index + length, 0) : min(index, length);
-	  },
-	  has: function(it, key){
-	    return hasOwnProperty.call(it, key);
-	  },
-	  create:     Object.create,
-	  getProto:   Object.getPrototypeOf,
-	  DESC:       DESC,
-	  desc:       desc,
-	  getDesc:    Object.getOwnPropertyDescriptor,
-	  setDesc:    defineProperty,
-	  setDescs:   Object.defineProperties,
-	  getKeys:    Object.keys,
-	  getNames:   Object.getOwnPropertyNames,
-	  getSymbols: Object.getOwnPropertySymbols,
-	  assertDefined: assertDefined,
-	  // Dummy, fix for not array-like ES3 string in es5 module
-	  ES5Object: Object,
-	  toObject: function(it){
-	    return $.ES5Object(assertDefined(it));
-	  },
-	  hide: hide,
-	  def: createDefiner(0),
-	  set: global.Symbol ? simpleSet : hide,
-	  each: [].forEach
-	});
-	/* eslint-disable no-undef */
-	if(typeof __e != 'undefined')__e = core;
-	if(typeof __g != 'undefined')__g = global;
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = function($){
-	  $.FW   = false;
-	  $.path = $.core;
-	  return $;
-	};
-
-/***/ },
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	exports["default"] = function (obj) {
-	  return obj && obj.__esModule ? obj : {
-	    "default": obj
-	  };
-	};
-
-	exports.__esModule = true;
-
-/***/ },
-/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var require;var require;/* WEBPACK VAR INJECTION */(function(__webpack_provided_window_dot_videojs) {/*** IMPORTS FROM imports-loader ***/
@@ -17193,18 +16917,18 @@
 
 	})(window, __webpack_provided_window_dot_videojs, window.pkcs7.unpad);
 	}.call(window));
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
-	module.exports = __webpack_require__(12);
+	module.exports = __webpack_require__(11);
 
 
 /***/ },
-/* 12 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -17212,10 +16936,10 @@
 	 * Module dependencies.
 	 */
 
-	var url = __webpack_require__(14);
-	var parser = __webpack_require__(16);
-	var Manager = __webpack_require__(23);
-	var debug = __webpack_require__(13)('socket.io-client');
+	var url = __webpack_require__(13);
+	var parser = __webpack_require__(15);
+	var Manager = __webpack_require__(22);
+	var debug = __webpack_require__(12)('socket.io-client');
 
 	/**
 	 * Module exports.
@@ -17292,12 +17016,12 @@
 	 * @api public
 	 */
 
-	exports.Manager = __webpack_require__(23);
-	exports.Socket = __webpack_require__(55);
+	exports.Manager = __webpack_require__(22);
+	exports.Socket = __webpack_require__(54);
 
 
 /***/ },
-/* 13 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -17440,7 +17164,7 @@
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -17448,8 +17172,8 @@
 	 * Module dependencies.
 	 */
 
-	var parseuri = __webpack_require__(15);
-	var debug = __webpack_require__(13)('socket.io-client:url');
+	var parseuri = __webpack_require__(14);
+	var debug = __webpack_require__(12)('socket.io-client:url');
 
 	/**
 	 * Module exports.
@@ -17520,7 +17244,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -17551,7 +17275,7 @@
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -17559,12 +17283,12 @@
 	 * Module dependencies.
 	 */
 
-	var debug = __webpack_require__(13)('socket.io-parser');
-	var json = __webpack_require__(18);
-	var isArray = __webpack_require__(20);
-	var Emitter = __webpack_require__(17);
-	var binary = __webpack_require__(21);
-	var isBuf = __webpack_require__(22);
+	var debug = __webpack_require__(12)('socket.io-parser');
+	var json = __webpack_require__(17);
+	var isArray = __webpack_require__(19);
+	var Emitter = __webpack_require__(16);
+	var binary = __webpack_require__(20);
+	var isBuf = __webpack_require__(21);
 
 	/**
 	 * Protocol version.
@@ -17957,7 +17681,7 @@
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -18127,7 +17851,7 @@
 
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! JSON v3.2.6 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
@@ -18137,7 +17861,7 @@
 
 	  // Detect the `define` function exposed by asynchronous module loaders. The
 	  // strict `define` check is necessary for compatibility with `r.js`.
-	  var isLoader = "function" === "function" && __webpack_require__(19);
+	  var isLoader = "function" === "function" && __webpack_require__(18);
 
 	  // Detect native implementations.
 	  var nativeJSON = typeof JSON == "object" && JSON;
@@ -18994,7 +18718,7 @@
 
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
@@ -19002,7 +18726,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, {}))
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -19011,7 +18735,7 @@
 
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*global Blob,File*/
@@ -19020,8 +18744,8 @@
 	 * Module requirements
 	 */
 
-	var isArray = __webpack_require__(20);
-	var isBuf = __webpack_require__(22);
+	var isArray = __webpack_require__(19);
+	var isBuf = __webpack_require__(21);
 
 	/**
 	 * Replaces every Buffer | ArrayBuffer in packet with a numbered placeholder.
@@ -19159,7 +18883,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 22 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -19179,7 +18903,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -19187,17 +18911,17 @@
 	 * Module dependencies.
 	 */
 
-	var url = __webpack_require__(14);
-	var eio = __webpack_require__(24);
-	var Socket = __webpack_require__(55);
-	var Emitter = __webpack_require__(17);
-	var parser = __webpack_require__(16);
-	var on = __webpack_require__(57);
-	var bind = __webpack_require__(58);
-	var object = __webpack_require__(61);
-	var debug = __webpack_require__(13)('socket.io-client:manager');
-	var indexOf = __webpack_require__(52);
-	var Backoff = __webpack_require__(62);
+	var url = __webpack_require__(13);
+	var eio = __webpack_require__(23);
+	var Socket = __webpack_require__(54);
+	var Emitter = __webpack_require__(16);
+	var parser = __webpack_require__(15);
+	var on = __webpack_require__(56);
+	var bind = __webpack_require__(57);
+	var object = __webpack_require__(60);
+	var debug = __webpack_require__(12)('socket.io-client:manager');
+	var indexOf = __webpack_require__(51);
+	var Backoff = __webpack_require__(61);
 
 	/**
 	 * Module exports
@@ -19688,19 +19412,19 @@
 
 
 /***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	module.exports =  __webpack_require__(24);
+
+
+/***/ },
 /* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
-	module.exports =  __webpack_require__(25);
-
-
-/***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	module.exports = __webpack_require__(26);
+	module.exports = __webpack_require__(25);
 
 	/**
 	 * Exports parser
@@ -19708,25 +19432,25 @@
 	 * @api public
 	 *
 	 */
-	module.exports.parser = __webpack_require__(36);
+	module.exports.parser = __webpack_require__(35);
 
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var transports = __webpack_require__(27);
-	var Emitter = __webpack_require__(17);
-	var debug = __webpack_require__(46)('engine.io-client:socket');
-	var index = __webpack_require__(52);
-	var parser = __webpack_require__(36);
-	var parseuri = __webpack_require__(53);
-	var parsejson = __webpack_require__(54);
-	var parseqs = __webpack_require__(45);
+	var transports = __webpack_require__(26);
+	var Emitter = __webpack_require__(16);
+	var debug = __webpack_require__(45)('engine.io-client:socket');
+	var index = __webpack_require__(51);
+	var parser = __webpack_require__(35);
+	var parseuri = __webpack_require__(52);
+	var parsejson = __webpack_require__(53);
+	var parseqs = __webpack_require__(44);
 
 	/**
 	 * Module exports.
@@ -19841,9 +19565,9 @@
 	 */
 
 	Socket.Socket = Socket;
-	Socket.Transport = __webpack_require__(35);
-	Socket.transports = __webpack_require__(27);
-	Socket.parser = __webpack_require__(36);
+	Socket.Transport = __webpack_require__(34);
+	Socket.transports = __webpack_require__(26);
+	Socket.parser = __webpack_require__(35);
 
 	/**
 	 * Creates transport of the given type.
@@ -20424,17 +20148,17 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 27 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies
 	 */
 
-	var XMLHttpRequest = __webpack_require__(28);
-	var XHR = __webpack_require__(32);
-	var JSONP = __webpack_require__(49);
-	var websocket = __webpack_require__(50);
+	var XMLHttpRequest = __webpack_require__(27);
+	var XHR = __webpack_require__(31);
+	var JSONP = __webpack_require__(48);
+	var websocket = __webpack_require__(49);
 
 	/**
 	 * Export transports.
@@ -20484,11 +20208,11 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 28 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// browser shim for xmlhttprequest module
-	var hasCORS = __webpack_require__(29);
+	var hasCORS = __webpack_require__(28);
 
 	module.exports = function(opts) {
 	  var xdomain = opts.xdomain;
@@ -20526,7 +20250,7 @@
 
 
 /***/ },
-/* 29 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -20534,7 +20258,7 @@
 	 * Module dependencies.
 	 */
 
-	var global = __webpack_require__(31);
+	var global = __webpack_require__(30);
 
 	/**
 	 * Module exports.
@@ -20555,8 +20279,8 @@
 
 
 /***/ },
-/* 30 */,
-/* 31 */
+/* 29 */,
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -20570,18 +20294,18 @@
 
 
 /***/ },
-/* 32 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module requirements.
 	 */
 
-	var XMLHttpRequest = __webpack_require__(28);
-	var Polling = __webpack_require__(33);
-	var Emitter = __webpack_require__(17);
-	var inherit = __webpack_require__(34);
-	var debug = __webpack_require__(46)('engine.io-client:polling-xhr');
+	var XMLHttpRequest = __webpack_require__(27);
+	var Polling = __webpack_require__(32);
+	var Emitter = __webpack_require__(16);
+	var inherit = __webpack_require__(33);
+	var debug = __webpack_require__(45)('engine.io-client:polling-xhr');
 
 	/**
 	 * Module exports.
@@ -20961,18 +20685,18 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 33 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(35);
-	var parseqs = __webpack_require__(45);
-	var parser = __webpack_require__(36);
-	var inherit = __webpack_require__(34);
-	var debug = __webpack_require__(46)('engine.io-client:polling');
+	var Transport = __webpack_require__(34);
+	var parseqs = __webpack_require__(44);
+	var parser = __webpack_require__(35);
+	var inherit = __webpack_require__(33);
+	var debug = __webpack_require__(45)('engine.io-client:polling');
 
 	/**
 	 * Module exports.
@@ -20985,7 +20709,7 @@
 	 */
 
 	var hasXHR2 = (function() {
-	  var XMLHttpRequest = __webpack_require__(28);
+	  var XMLHttpRequest = __webpack_require__(27);
 	  var xhr = new XMLHttpRequest({ xdomain: false });
 	  return null != xhr.responseType;
 	})();
@@ -21212,7 +20936,7 @@
 
 
 /***/ },
-/* 34 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -21224,15 +20948,15 @@
 	};
 
 /***/ },
-/* 35 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(36);
-	var Emitter = __webpack_require__(17);
+	var parser = __webpack_require__(35);
+	var Emitter = __webpack_require__(16);
 
 	/**
 	 * Module exports.
@@ -21389,19 +21113,19 @@
 
 
 /***/ },
-/* 36 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
 	 * Module dependencies.
 	 */
 
-	var keys = __webpack_require__(37);
-	var hasBinary = __webpack_require__(38);
-	var sliceBuffer = __webpack_require__(40);
-	var base64encoder = __webpack_require__(41);
-	var after = __webpack_require__(42);
-	var utf8 = __webpack_require__(43);
+	var keys = __webpack_require__(36);
+	var hasBinary = __webpack_require__(37);
+	var sliceBuffer = __webpack_require__(39);
+	var base64encoder = __webpack_require__(40);
+	var after = __webpack_require__(41);
+	var utf8 = __webpack_require__(42);
 
 	/**
 	 * Check if we are running an android browser. That requires us to use
@@ -21458,7 +21182,7 @@
 	 * Create a blob api even for blob builder when vendor prefixes exist
 	 */
 
-	var Blob = __webpack_require__(44);
+	var Blob = __webpack_require__(43);
 
 	/**
 	 * Encodes a packet.
@@ -21990,7 +21714,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 37 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -22015,7 +21739,7 @@
 
 
 /***/ },
-/* 38 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -22023,7 +21747,7 @@
 	 * Module requirements.
 	 */
 
-	var isArray = __webpack_require__(39);
+	var isArray = __webpack_require__(38);
 
 	/**
 	 * Module exports.
@@ -22080,7 +21804,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 39 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -22089,7 +21813,7 @@
 
 
 /***/ },
-/* 40 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -22124,7 +21848,7 @@
 
 
 /***/ },
-/* 41 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -22189,7 +21913,7 @@
 
 
 /***/ },
-/* 42 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = after
@@ -22223,7 +21947,7 @@
 
 
 /***/ },
-/* 43 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! http://mths.be/utf8js v2.0.0 by @mathias */
@@ -22464,10 +22188,10 @@
 
 	}(this));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7)(module), (function() { return this; }())))
 
 /***/ },
-/* 44 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
@@ -22523,7 +22247,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 45 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -22566,7 +22290,7 @@
 
 
 /***/ },
-/* 46 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -22576,7 +22300,7 @@
 	 * Expose `debug()` as the module.
 	 */
 
-	exports = module.exports = __webpack_require__(47);
+	exports = module.exports = __webpack_require__(46);
 	exports.log = log;
 	exports.formatArgs = formatArgs;
 	exports.save = save;
@@ -22719,7 +22443,7 @@
 
 
 /***/ },
-/* 47 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -22735,7 +22459,7 @@
 	exports.disable = disable;
 	exports.enable = enable;
 	exports.enabled = enabled;
-	exports.humanize = __webpack_require__(48);
+	exports.humanize = __webpack_require__(47);
 
 	/**
 	 * The currently active debug mode names, and names to skip.
@@ -22922,7 +22646,7 @@
 
 
 /***/ },
-/* 48 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -23039,7 +22763,7 @@
 
 
 /***/ },
-/* 49 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -23047,8 +22771,8 @@
 	 * Module requirements.
 	 */
 
-	var Polling = __webpack_require__(33);
-	var inherit = __webpack_require__(34);
+	var Polling = __webpack_require__(32);
+	var inherit = __webpack_require__(33);
 
 	/**
 	 * Module exports.
@@ -23279,18 +23003,18 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 50 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Transport = __webpack_require__(35);
-	var parser = __webpack_require__(36);
-	var parseqs = __webpack_require__(45);
-	var inherit = __webpack_require__(34);
-	var debug = __webpack_require__(46)('engine.io-client:websocket');
+	var Transport = __webpack_require__(34);
+	var parser = __webpack_require__(35);
+	var parseqs = __webpack_require__(44);
+	var inherit = __webpack_require__(33);
+	var debug = __webpack_require__(45)('engine.io-client:websocket');
 
 	/**
 	 * `ws` exposes a WebSocket-compatible interface in
@@ -23298,7 +23022,7 @@
 	 * in the browser.
 	 */
 
-	var WebSocket = __webpack_require__(51);
+	var WebSocket = __webpack_require__(50);
 
 	/**
 	 * Module exports.
@@ -23523,7 +23247,7 @@
 
 
 /***/ },
-/* 51 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -23572,7 +23296,7 @@
 
 
 /***/ },
-/* 52 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -23587,7 +23311,7 @@
 	};
 
 /***/ },
-/* 53 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -23632,7 +23356,7 @@
 
 
 /***/ },
-/* 54 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/**
@@ -23670,7 +23394,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 55 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -23678,13 +23402,13 @@
 	 * Module dependencies.
 	 */
 
-	var parser = __webpack_require__(16);
-	var Emitter = __webpack_require__(17);
-	var toArray = __webpack_require__(56);
-	var on = __webpack_require__(57);
-	var bind = __webpack_require__(58);
-	var debug = __webpack_require__(13)('socket.io-client:socket');
-	var hasBin = __webpack_require__(59);
+	var parser = __webpack_require__(15);
+	var Emitter = __webpack_require__(16);
+	var toArray = __webpack_require__(55);
+	var on = __webpack_require__(56);
+	var bind = __webpack_require__(57);
+	var debug = __webpack_require__(12)('socket.io-client:socket');
+	var hasBin = __webpack_require__(58);
 
 	/**
 	 * Module exports.
@@ -24061,7 +23785,7 @@
 
 
 /***/ },
-/* 56 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = toArray
@@ -24080,7 +23804,7 @@
 
 
 /***/ },
-/* 57 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -24110,7 +23834,7 @@
 
 
 /***/ },
-/* 58 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -24139,7 +23863,7 @@
 
 
 /***/ },
-/* 59 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -24147,7 +23871,7 @@
 	 * Module requirements.
 	 */
 
-	var isArray = __webpack_require__(60);
+	var isArray = __webpack_require__(59);
 
 	/**
 	 * Module exports.
@@ -24204,7 +23928,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 60 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -24213,7 +23937,7 @@
 
 
 /***/ },
-/* 61 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -24302,7 +24026,7 @@
 	};
 
 /***/ },
-/* 62 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -24393,14 +24117,14 @@
 
 
 /***/ },
-/* 63 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _Object$defineProperty = __webpack_require__(5)['default'];
+	var _Object$defineProperty = __webpack_require__(1)['default'];
 
-	var _interopRequireDefault = __webpack_require__(9)['default'];
+	var _interopRequireDefault = __webpack_require__(5)['default'];
 
 	_Object$defineProperty(exports, '__esModule', {
 	  value: true
@@ -24410,7 +24134,7 @@
 	exports.updateChart = updateChart;
 	exports.setupChart = setupChart;
 
-	var _chartJs = __webpack_require__(64);
+	var _chartJs = __webpack_require__(63);
 
 	var _chartJs2 = _interopRequireDefault(_chartJs);
 
@@ -24479,7 +24203,7 @@
 	}
 
 /***/ },
-/* 64 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -24786,7 +24510,7 @@
 				//Method for warning of errors
 				if (window.console && typeof window.console.warn == "function") console.warn(str);
 			},
-			amd = helpers.amd = ("function" == 'function' && __webpack_require__(19)),
+			amd = helpers.amd = ("function" == 'function' && __webpack_require__(18)),
 			//-- Math methods
 			isNumber = helpers.isNumber = function(n){
 				return !isNaN(parseFloat(n)) && isFinite(n);
@@ -27961,16 +27685,571 @@
 	}).call(this);
 
 /***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;//     uuid.js
+	//
+	//     Copyright (c) 2010-2012 Robert Kieffer
+	//     MIT License - http://opensource.org/licenses/mit-license.php
+
+	(function() {
+	  var _global = this;
+
+	  // Unique ID creation requires a high quality random # generator.  We feature
+	  // detect to determine the best RNG source, normalizing to a function that
+	  // returns 128-bits of randomness, since that's what's usually required
+	  var _rng;
+
+	  // Node.js crypto-based RNG - http://nodejs.org/docs/v0.6.2/api/crypto.html
+	  //
+	  // Moderately fast, high quality
+	  if (typeof(_global.require) == 'function') {
+	    try {
+	      var _rb = _global.require('crypto').randomBytes;
+	      _rng = _rb && function() {return _rb(16);};
+	    } catch(e) {}
+	  }
+
+	  if (!_rng && _global.crypto && crypto.getRandomValues) {
+	    // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+	    //
+	    // Moderately fast, high quality
+	    var _rnds8 = new Uint8Array(16);
+	    _rng = function whatwgRNG() {
+	      crypto.getRandomValues(_rnds8);
+	      return _rnds8;
+	    };
+	  }
+
+	  if (!_rng) {
+	    // Math.random()-based (RNG)
+	    //
+	    // If all else fails, use Math.random().  It's fast, but is of unspecified
+	    // quality.
+	    var  _rnds = new Array(16);
+	    _rng = function() {
+	      for (var i = 0, r; i < 16; i++) {
+	        if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+	        _rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+	      }
+
+	      return _rnds;
+	    };
+	  }
+
+	  // Buffer class to use
+	  var BufferClass = typeof(_global.Buffer) == 'function' ? _global.Buffer : Array;
+
+	  // Maps for number <-> hex string conversion
+	  var _byteToHex = [];
+	  var _hexToByte = {};
+	  for (var i = 0; i < 256; i++) {
+	    _byteToHex[i] = (i + 0x100).toString(16).substr(1);
+	    _hexToByte[_byteToHex[i]] = i;
+	  }
+
+	  // **`parse()` - Parse a UUID into it's component bytes**
+	  function parse(s, buf, offset) {
+	    var i = (buf && offset) || 0, ii = 0;
+
+	    buf = buf || [];
+	    s.toLowerCase().replace(/[0-9a-f]{2}/g, function(oct) {
+	      if (ii < 16) { // Don't overflow!
+	        buf[i + ii++] = _hexToByte[oct];
+	      }
+	    });
+
+	    // Zero out remaining bytes if string was short
+	    while (ii < 16) {
+	      buf[i + ii++] = 0;
+	    }
+
+	    return buf;
+	  }
+
+	  // **`unparse()` - Convert UUID byte array (ala parse()) into a string**
+	  function unparse(buf, offset) {
+	    var i = offset || 0, bth = _byteToHex;
+	    return  bth[buf[i++]] + bth[buf[i++]] +
+	            bth[buf[i++]] + bth[buf[i++]] + '-' +
+	            bth[buf[i++]] + bth[buf[i++]] + '-' +
+	            bth[buf[i++]] + bth[buf[i++]] + '-' +
+	            bth[buf[i++]] + bth[buf[i++]] + '-' +
+	            bth[buf[i++]] + bth[buf[i++]] +
+	            bth[buf[i++]] + bth[buf[i++]] +
+	            bth[buf[i++]] + bth[buf[i++]];
+	  }
+
+	  // **`v1()` - Generate time-based UUID**
+	  //
+	  // Inspired by https://github.com/LiosK/UUID.js
+	  // and http://docs.python.org/library/uuid.html
+
+	  // random #'s we need to init node and clockseq
+	  var _seedBytes = _rng();
+
+	  // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
+	  var _nodeId = [
+	    _seedBytes[0] | 0x01,
+	    _seedBytes[1], _seedBytes[2], _seedBytes[3], _seedBytes[4], _seedBytes[5]
+	  ];
+
+	  // Per 4.2.2, randomize (14 bit) clockseq
+	  var _clockseq = (_seedBytes[6] << 8 | _seedBytes[7]) & 0x3fff;
+
+	  // Previous uuid creation time
+	  var _lastMSecs = 0, _lastNSecs = 0;
+
+	  // See https://github.com/broofa/node-uuid for API details
+	  function v1(options, buf, offset) {
+	    var i = buf && offset || 0;
+	    var b = buf || [];
+
+	    options = options || {};
+
+	    var clockseq = options.clockseq != null ? options.clockseq : _clockseq;
+
+	    // UUID timestamps are 100 nano-second units since the Gregorian epoch,
+	    // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
+	    // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
+	    // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
+	    var msecs = options.msecs != null ? options.msecs : new Date().getTime();
+
+	    // Per 4.2.1.2, use count of uuid's generated during the current clock
+	    // cycle to simulate higher resolution clock
+	    var nsecs = options.nsecs != null ? options.nsecs : _lastNSecs + 1;
+
+	    // Time since last uuid creation (in msecs)
+	    var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
+
+	    // Per 4.2.1.2, Bump clockseq on clock regression
+	    if (dt < 0 && options.clockseq == null) {
+	      clockseq = clockseq + 1 & 0x3fff;
+	    }
+
+	    // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
+	    // time interval
+	    if ((dt < 0 || msecs > _lastMSecs) && options.nsecs == null) {
+	      nsecs = 0;
+	    }
+
+	    // Per 4.2.1.2 Throw error if too many uuids are requested
+	    if (nsecs >= 10000) {
+	      throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+	    }
+
+	    _lastMSecs = msecs;
+	    _lastNSecs = nsecs;
+	    _clockseq = clockseq;
+
+	    // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+	    msecs += 12219292800000;
+
+	    // `time_low`
+	    var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
+	    b[i++] = tl >>> 24 & 0xff;
+	    b[i++] = tl >>> 16 & 0xff;
+	    b[i++] = tl >>> 8 & 0xff;
+	    b[i++] = tl & 0xff;
+
+	    // `time_mid`
+	    var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
+	    b[i++] = tmh >>> 8 & 0xff;
+	    b[i++] = tmh & 0xff;
+
+	    // `time_high_and_version`
+	    b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
+	    b[i++] = tmh >>> 16 & 0xff;
+
+	    // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
+	    b[i++] = clockseq >>> 8 | 0x80;
+
+	    // `clock_seq_low`
+	    b[i++] = clockseq & 0xff;
+
+	    // `node`
+	    var node = options.node || _nodeId;
+	    for (var n = 0; n < 6; n++) {
+	      b[i + n] = node[n];
+	    }
+
+	    return buf ? buf : unparse(b);
+	  }
+
+	  // **`v4()` - Generate random UUID**
+
+	  // See https://github.com/broofa/node-uuid for API details
+	  function v4(options, buf, offset) {
+	    // Deprecated - 'format' argument, as supported in v1.2
+	    var i = buf && offset || 0;
+
+	    if (typeof(options) == 'string') {
+	      buf = options == 'binary' ? new BufferClass(16) : null;
+	      options = null;
+	    }
+	    options = options || {};
+
+	    var rnds = options.random || (options.rng || _rng)();
+
+	    // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+	    rnds[6] = (rnds[6] & 0x0f) | 0x40;
+	    rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+	    // Copy bytes to buffer, if provided
+	    if (buf) {
+	      for (var ii = 0; ii < 16; ii++) {
+	        buf[i + ii] = rnds[ii];
+	      }
+	    }
+
+	    return buf || unparse(rnds);
+	  }
+
+	  // Export public API
+	  var uuid = v4;
+	  uuid.v1 = v1;
+	  uuid.v4 = v4;
+	  uuid.parse = parse;
+	  uuid.unparse = unparse;
+	  uuid.BufferClass = BufferClass;
+
+	  if (typeof(module) != 'undefined' && module.exports) {
+	    // Publish as node.js module
+	    module.exports = uuid;
+	  } else  if (true) {
+	    // Publish as AMD module
+	    !(__WEBPACK_AMD_DEFINE_RESULT__ = function() {return uuid;}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	 
+
+	  } else {
+	    // Publish as global (in browsers)
+	    var _previousRoot = _global.uuid;
+
+	    // **`noConflict()` - (browser only) to reset global 'uuid' var**
+	    uuid.noConflict = function() {
+	      _global.uuid = _previousRoot;
+	      return uuid;
+	    };
+
+	    _global.uuid = uuid;
+	  }
+	}).call(this);
+
+
+/***/ },
 /* 65 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(videojs) {/*** IMPORTS FROM imports-loader ***/
+	(function() {
+
+	(function(window){
+	  var urlCount = 0,
+	      NativeMediaSource = window.MediaSource || window.WebKitMediaSource || {},
+	      nativeUrl = window.URL || {},
+	      EventEmitter,
+	      flvCodec = /video\/flv(;\s*codecs=["']vp6,aac["'])?$/,
+	      objectUrlPrefix = 'blob:vjs-media-source/';
+
+	  EventEmitter = function(){};
+	  EventEmitter.prototype.init = function(){
+	    this.listeners = [];
+	  };
+	  EventEmitter.prototype.addEventListener = function(type, listener){
+	    if (!this.listeners[type]){
+	      this.listeners[type] = [];
+	    }
+	    this.listeners[type].unshift(listener);
+	  };
+	  EventEmitter.prototype.removeEventListener = function(type, listener){
+	    var listeners = this.listeners[type],
+	        i = listeners.length;
+	    while (i--) {
+	      if (listeners[i] === listener) {
+	        return listeners.splice(i, 1);
+	      }
+	    }
+	  };
+	  EventEmitter.prototype.trigger = function(event){
+	    var listeners = this.listeners[event.type] || [],
+	        i = listeners.length;
+	    while (i--) {
+	      listeners[i](event);
+	    }
+	  };
+
+	  // extend the media source APIs
+
+	  // Media Source
+	  videojs.MediaSource = function(){
+	    var self = this;
+	    videojs.MediaSource.prototype.init.call(this);
+
+	    this.sourceBuffers = [];
+	    this.readyState = 'closed';
+	    this.listeners = {
+	      sourceopen: [function(event){
+	        // find the swf where we will push media data
+	        self.swfObj = document.getElementById(event.swfId);
+	        self.readyState = 'open';
+
+	        // trigger load events
+	        if (self.swfObj) {
+	          self.swfObj.vjs_load();
+	        }
+	      }],
+	      webkitsourceopen: [function(event){
+	        self.trigger({
+	          type: 'sourceopen'
+	        });
+	      }]
+	    };
+	  };
+	  videojs.MediaSource.prototype = new EventEmitter();
+
+	  /**
+	   * The maximum size in bytes for append operations to the video.js
+	   * SWF. Calling through to Flash blocks and can be expensive so
+	   * tuning this parameter may improve playback on slower
+	   * systems. There are two factors to consider:
+	   * - Each interaction with the SWF must be quick or you risk dropping
+	   * video frames. To maintain 60fps for the rest of the page, each append
+	   * cannot take longer than 16ms. Given the likelihood that the page will
+	   * be executing more javascript than just playback, you probably want to
+	   * aim for ~8ms.
+	   * - Bigger appends significantly increase throughput. The total number of
+	   * bytes over time delivered to the SWF must exceed the video bitrate or
+	   * playback will stall.
+	   *
+	   * The default is set so that a 4MB/s stream should playback
+	   * without stuttering.
+	   */
+	  videojs.MediaSource.BYTES_PER_SECOND_GOAL = 4 * 1024 * 1024;
+	  videojs.MediaSource.TICKS_PER_SECOND = 60;
+
+	  // create a new source buffer to receive a type of media data
+	  videojs.MediaSource.prototype.addSourceBuffer = function(type){
+	    var sourceBuffer;
+
+	    // if this is an FLV type, we'll push data to flash
+	    if (flvCodec.test(type)) {
+	      // Flash source buffers
+	      sourceBuffer = new videojs.SourceBuffer(this);
+	    } else if (this.nativeSource) {
+	      // native source buffers
+	      sourceBuffer = this.nativeSource.addSourceBuffer.apply(this.nativeSource, arguments);
+	    } else {
+	      throw new Error('NotSupportedError (Video.js)');
+	    }
+
+	    this.sourceBuffers.push(sourceBuffer);
+	    return sourceBuffer;
+	  };
+	  videojs.MediaSource.prototype.endOfStream = function(){
+	    this.readyState = 'ended';
+	  };
+
+	  // store references to the media sources so they can be connected
+	  // to a video element (a swf object)
+	  videojs.mediaSources = {};
+	  // provide a method for a swf object to notify JS that a media source is now open
+	  videojs.MediaSource.open = function(msObjectURL, swfId){
+	    var mediaSource = videojs.mediaSources[msObjectURL];
+
+	    if (mediaSource) {
+	      mediaSource.trigger({
+	        type: 'sourceopen',
+	        swfId: swfId
+	      });
+	    } else {
+	      throw new Error('Media Source not found (Video.js)');
+	    }
+	  };
+
+	  // Source Buffer
+	  videojs.SourceBuffer = function(source){
+	    var self = this,
+
+	        // byte arrays queued to be appended
+	        buffer = [],
+
+	        // the total number of queued bytes
+	        bufferSize = 0,
+	        scheduleTick = function(func) {
+	          // Chrome doesn't invoke requestAnimationFrame callbacks
+	          // in background tabs, so use setTimeout.
+	          window.setTimeout(func,
+	                            Math.ceil(1000 / videojs.MediaSource.TICKS_PER_SECOND));
+	        },
+	        append = function() {
+	          var chunk, i, length, payload, maxSize,
+	              binary = '';
+
+	          if (!buffer.length) {
+	            // do nothing if the buffer is empty
+	            return;
+	          }
+
+	          if (document.hidden) {
+	            // When the document is hidden, the browser will likely
+	            // invoke callbacks less frequently than we want. Just
+	            // append a whole second's worth of data. It doesn't
+	            // matter if the video janks, since the user can't see it.
+	            maxSize = videojs.MediaSource.BYTES_PER_SECOND_GOAL;
+	          } else {
+	            maxSize = Math.ceil(videojs.MediaSource.BYTES_PER_SECOND_GOAL/
+	                                videojs.MediaSource.TICKS_PER_SECOND);
+	          }
+
+	          // concatenate appends up to the max append size
+	          payload = new Uint8Array(Math.min(maxSize, bufferSize));
+	          i = payload.byteLength;
+	          while (i) {
+	            chunk = buffer[0].subarray(0, i);
+
+	            payload.set(chunk, payload.byteLength - i);
+
+	            // requeue any bytes that won't make it this round
+	            if (chunk.byteLength < buffer[0].byteLength) {
+	              buffer[0] = buffer[0].subarray(i);
+	            } else {
+	              buffer.shift();
+	            }
+
+	            i -= chunk.byteLength;
+	          }
+	          bufferSize -= payload.byteLength;
+
+	          // base64 encode the bytes
+	          for (i = 0, length = payload.byteLength; i < length; i++) {
+	            binary += String.fromCharCode(payload[i]);
+	          }
+	          b64str = window.btoa(binary);
+
+	          // bypass normal ExternalInterface calls and pass xml directly
+	          // IE can be slow by default
+	          self.source.swfObj.CallFunction('<invoke name="vjs_appendBuffer"' +
+	                                          'returntype="javascript"><arguments><string>' +
+	                                          b64str +
+	                                          '</string></arguments></invoke>');
+
+	          // schedule another append if necessary
+	          if (bufferSize !== 0) {
+	            scheduleTick(append);
+	          } else {
+	            self.updating = false;
+	            self.trigger({ type: 'updateend' });
+
+	            if (self.source.readyState === 'ended') {
+	              self.source.swfObj.vjs_endOfStream();
+	            }
+	          }
+	        };
+
+	    videojs.SourceBuffer.prototype.init.call(this);
+	    this.source = source;
+
+	    // indicates whether the asynchronous continuation of an operation
+	    // is still being processed
+	    // see https://w3c.github.io/media-source/#widl-SourceBuffer-updating
+	    this.updating = false;
+
+	    // accept video data and pass to the video (swf) object
+	    this.appendBuffer = function(uint8Array){
+	      var error;
+
+	      if (this.updating) {
+	        error = new Error('SourceBuffer.append() cannot be called ' +
+	                          'while an update is in progress');
+	        error.name = 'InvalidStateError';
+	        error.code = 11;
+	        throw error;
+	      }
+	      if (buffer.length === 0) {
+	        scheduleTick(append);
+	      }
+
+	      this.updating = true;
+	      this.source.readyState = 'open';
+	      this.trigger({ type: 'update' });
+
+	      buffer.push(uint8Array);
+	      bufferSize += uint8Array.byteLength;
+	    };
+
+	    // reset the parser and remove any data queued to be sent to the swf
+	    this.abort = function() {
+	      buffer = [];
+	      bufferSize = 0;
+	      this.source.swfObj.vjs_abort();
+
+	      // report any outstanding updates have ended
+	      if (this.updating) {
+	        this.updating = false;
+	        this.trigger({ type: 'updateend' });
+	      }
+
+	    };
+	  };
+	  videojs.SourceBuffer.prototype = new EventEmitter();
+
+	  // URL
+	  videojs.URL = {
+	    createObjectURL: function(object){
+	      var url = objectUrlPrefix + urlCount;
+
+	      urlCount++;
+
+	      // setup the mapping back to object
+	      videojs.mediaSources[url] = object;
+
+	      return url;
+	    }
+	  };
+
+	  // plugin
+	  videojs.plugin('mediaSource', function(options){
+	    var player = this;
+
+	    player.on('loadstart', function(){
+	      var url = player.currentSrc(),
+	          trigger = function(event){
+	            mediaSource.trigger(event);
+	          },
+	          mediaSource;
+
+	      if (player.techName === 'Html5' && url.indexOf(objectUrlPrefix) === 0) {
+	        // use the native media source implementation
+	        mediaSource = videojs.mediaSources[url];
+
+	        if (!mediaSource.nativeUrl) {
+	          // initialize the native source
+	          mediaSource.nativeSource = new NativeMediaSource();
+	          mediaSource.nativeSource.addEventListener('sourceopen', trigger, false);
+	          mediaSource.nativeSource.addEventListener('webkitsourceopen', trigger, false);
+	          mediaSource.nativeUrl = nativeUrl.createObjectURL(mediaSource.nativeSource);
+	        }
+	        player.src(mediaSource.nativeUrl);
+	      }
+	    });
+	  });
+
+	})(this);
+	}.call(window));
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+
+/***/ },
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(66);
+	var content = __webpack_require__(67);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(72)(content, {});
+	var update = __webpack_require__(73)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -27987,20 +28266,20 @@
 	}
 
 /***/ },
-/* 66 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(68)();
-	exports.push([module.id, "/*!\nVideo.js Default Styles (http://videojs.com)\nVersion GENERATED_AT_BUILD\nCreate your own skin at http://designer.videojs.com\n*/\n/* SKIN\n================================================================================\nThe main class name for all skin-specific styles. To make your own skin,\nreplace all occurrences of 'vjs-default-skin' with a new name. Then add your new\nskin name to your video tag instead of the default skin.\ne.g. <video class=\"video-js my-skin-name\">\n*/\n.vjs-default-skin {\n  color: #cccccc;\n}\n/* Custom Icon Font\n--------------------------------------------------------------------------------\nThe control icons are from a custom font. Each icon corresponds to a character\n(e.g. \"\\e001\"). Font icons allow for easy scaling and coloring of icons.\n*/\n@font-face {\n  font-family: 'VideoJS';\n  src: url("+__webpack_require__(69)+");\n  src: url("+__webpack_require__(69)+"?#iefix) format('embedded-opentype'), url("+__webpack_require__(67)+") format('woff'), url("+__webpack_require__(70)+") format('truetype'), url("+__webpack_require__(71)+"#icomoon) format('svg');\n  font-weight: normal;\n  font-style: normal;\n}\n/* Base UI Component Classes\n--------------------------------------------------------------------------------\n*/\n/* Slider - used for Volume bar and Seek bar */\n.vjs-default-skin .vjs-slider {\n  /* Replace browser focus highlight with handle highlight */\n  outline: 0;\n  position: relative;\n  cursor: pointer;\n  padding: 0;\n  /* background-color-with-alpha */\n  background-color: #333333;\n  background-color: rgba(51, 51, 51, 0.9);\n}\n.vjs-default-skin .vjs-slider:focus {\n  /* box-shadow */\n  box-shadow: 0 0 2em #ffffff;\n}\n.vjs-default-skin .vjs-slider-handle {\n  position: absolute;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-slider-handle:before {\n  content: \"\\e009\";\n  font-family: VideoJS;\n  font-size: 1em;\n  line-height: 1;\n  text-align: center;\n  text-shadow: 0em 0em 1em #fff;\n  position: absolute;\n  top: 0;\n  left: 0;\n  /* Rotate the square icon to make a diamond */\n  /* transform */\n  -webkit-transform: rotate(-45deg);\n  -ms-transform: rotate(-45deg);\n  transform: rotate(-45deg);\n}\n/* Control Bar\n--------------------------------------------------------------------------------\nThe default control bar that is a container for most of the controls.\n*/\n.vjs-default-skin .vjs-control-bar {\n  /* Start hidden */\n  display: none;\n  position: absolute;\n  /* Place control bar at the bottom of the player box/video.\n     If you want more margin below the control bar, add more height. */\n  bottom: 0;\n  /* Use left/right to stretch to 100% width of player div */\n  left: 0;\n  right: 0;\n  /* Height includes any margin you want above or below control items */\n  height: 3.0em;\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n}\n/* Show the control bar only once the video has started playing */\n.vjs-default-skin.vjs-has-started .vjs-control-bar {\n  display: block;\n  /* Visibility needed to make sure things hide in older browsers too. */\n  visibility: visible;\n  opacity: 1;\n  /* transition */\n  -webkit-transition: visibility 0.1s, opacity 0.1s;\n  transition: visibility 0.1s, opacity 0.1s;\n}\n/* Hide the control bar when the video is playing and the user is inactive  */\n.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  display: block;\n  visibility: hidden;\n  opacity: 0;\n  /* transition */\n  -webkit-transition: visibility 1s, opacity 1s;\n  transition: visibility 1s, opacity 1s;\n}\n.vjs-default-skin.vjs-controls-disabled .vjs-control-bar {\n  display: none;\n}\n.vjs-default-skin.vjs-using-native-controls .vjs-control-bar {\n  display: none;\n}\n/* The control bar shouldn't show after an error */\n.vjs-default-skin.vjs-error .vjs-control-bar {\n  display: none;\n}\n/* Don't hide the control bar if it's audio */\n.vjs-audio.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  opacity: 1;\n  visibility: visible;\n}\n/* IE8 is flakey with fonts, and you have to change the actual content to force\nfonts to show/hide properly.\n  - \"\\9\" IE8 hack didn't work for this\n  - Found in XP IE8 from http://modern.ie. Does not show up in \"IE8 mode\" in IE9\n*/\n@media \\0screen {\n  .vjs-default-skin.vjs-user-inactive.vjs-playing .vjs-control-bar :before {\n    content: \"\";\n  }\n}\n/* General styles for individual controls. */\n.vjs-default-skin .vjs-control {\n  outline: none;\n  position: relative;\n  float: left;\n  text-align: center;\n  margin: 0;\n  padding: 0;\n  height: 3.0em;\n  width: 4em;\n}\n/* Font button icons */\n.vjs-default-skin .vjs-control:before {\n  font-family: VideoJS;\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-control:focus:before,\n.vjs-default-skin .vjs-control:hover:before {\n  text-shadow: 0em 0em 1em #ffffff;\n}\n.vjs-default-skin .vjs-control:focus {\n  /*  outline: 0; */\n  /* keyboard-only users cannot see the focus on several of the UI elements when\n  this is set to 0 */\n}\n/* Hide control text visually, but have it available for screenreaders */\n.vjs-default-skin .vjs-control-text {\n  /* hide-visually */\n  border: 0;\n  clip: rect(0 0 0 0);\n  height: 1px;\n  margin: -1px;\n  overflow: hidden;\n  padding: 0;\n  position: absolute;\n  width: 1px;\n}\n/* Play/Pause\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-play-control {\n  width: 5em;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-play-control:before {\n  content: \"\\e001\";\n}\n.vjs-default-skin.vjs-playing .vjs-play-control:before {\n  content: \"\\e002\";\n}\n/* Playback toggle\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-playback-rate .vjs-playback-rate-value {\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n.vjs-default-skin .vjs-playback-rate.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 4em;\n  left: -2em;\n  list-style: none;\n}\n/* Volume/Mute\n-------------------------------------------------------------------------------- */\n.vjs-default-skin .vjs-mute-control,\n.vjs-default-skin .vjs-volume-menu-button {\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-mute-control:before,\n.vjs-default-skin .vjs-volume-menu-button:before {\n  content: \"\\e006\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-0:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-0:before {\n  content: \"\\e003\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-1:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-1:before {\n  content: \"\\e004\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-2:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-2:before {\n  content: \"\\e005\";\n}\n.vjs-default-skin .vjs-volume-control {\n  width: 5em;\n  float: right;\n}\n.vjs-default-skin .vjs-volume-bar {\n  width: 5em;\n  height: 0.6em;\n  margin: 1.1em auto 0;\n}\n.vjs-default-skin .vjs-volume-level {\n  position: absolute;\n  top: 0;\n  left: 0;\n  height: 0.5em;\n  /* assuming volume starts at 1.0 */\n  width: 100%;\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-volume-bar .vjs-volume-handle {\n  width: 0.5em;\n  height: 0.5em;\n  /* Assumes volume starts at 1.0. If you change the size of the\n     handle relative to the volume bar, you'll need to update this value\n     too. */\n  left: 4.5em;\n}\n.vjs-default-skin .vjs-volume-handle:before {\n  font-size: 0.9em;\n  top: -0.2em;\n  left: -0.2em;\n  width: 1em;\n  height: 1em;\n}\n/* The volume menu button is like menu buttons (captions/subtitles) but works\n    a little differently. It needs to be possible to tab to the volume slider\n    without hitting space bar on the menu button. To do this we're not using\n    display:none to hide the slider menu by default, and instead setting the\n    width and height to zero. */\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu {\n  display: block;\n  width: 0;\n  height: 0;\n  border-top-color: transparent;\n}\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu .vjs-menu-content {\n  height: 0;\n  width: 0;\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing {\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu .vjs-menu-content,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing .vjs-menu-content {\n  height: 2.9em;\n  width: 10em;\n}\n/* Progress\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-progress-control {\n  position: absolute;\n  left: 0;\n  right: 0;\n  width: auto;\n  font-size: 0.3em;\n  height: 1em;\n  /* Set above the rest of the controls. */\n  top: -1em;\n  /* Shrink the bar slower than it grows. */\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* On hover, make the progress bar grow to something that's more clickable.\n    This simply changes the overall font for the progress bar, and this\n    updates both the em-based widths and heights, as wells as the icon font */\n.vjs-default-skin:hover .vjs-progress-control {\n  font-size: .9em;\n  /* Even though we're not changing the top/height, we need to include them in\n      the transition so they're handled correctly. */\n  /* transition */\n  -webkit-transition: all 0.2s;\n  transition: all 0.2s;\n}\n/* Box containing play and load progresses. Also acts as seek scrubber. */\n.vjs-default-skin .vjs-progress-holder {\n  height: 100%;\n}\n/* Progress Bars */\n.vjs-default-skin .vjs-progress-holder .vjs-play-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress div {\n  position: absolute;\n  display: block;\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  /* updated by javascript during playback */\n  width: 0;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-play-progress {\n  /*\n    Using a data URI to create the white diagonal lines with a transparent\n      background. Surprisingly works in IE8.\n      Created using http://www.patternify.com\n    Changing the first color value will change the bar color.\n    Also using a paralax effect to make the lines move backwards.\n      The -50% left position makes that happen.\n  */\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-load-progress {\n  background: #646464 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.2);\n}\n/* there are child elements of the load progress bar that represent the\n   specific time ranges that have been buffered */\n.vjs-default-skin .vjs-load-progress div {\n  background: #787878 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.1);\n}\n.vjs-default-skin .vjs-seek-handle {\n  width: 1.5em;\n  height: 100%;\n}\n.vjs-default-skin .vjs-seek-handle:before {\n  padding-top: 0.1em /* Minor adjustment */;\n}\n/* Live Mode\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin.vjs-live .vjs-time-controls,\n.vjs-default-skin.vjs-live .vjs-time-divider,\n.vjs-default-skin.vjs-live .vjs-progress-control {\n  display: none;\n}\n.vjs-default-skin.vjs-live .vjs-live-display {\n  display: block;\n}\n/* Live Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-live-display {\n  display: none;\n  font-size: 1em;\n  line-height: 3em;\n}\n/* Time Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-time-controls {\n  font-size: 1em;\n  /* Align vertically by making the line height the same as the control bar */\n  line-height: 3em;\n}\n.vjs-default-skin .vjs-current-time {\n  float: left;\n}\n.vjs-default-skin .vjs-duration {\n  float: left;\n}\n/* Remaining time is in the HTML, but not included in default design */\n.vjs-default-skin .vjs-remaining-time {\n  display: none;\n  float: left;\n}\n.vjs-time-divider {\n  float: left;\n  line-height: 3em;\n}\n/* Fullscreen\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-fullscreen-control {\n  width: 3.8em;\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-fullscreen-control:before {\n  content: \"\\e000\";\n}\n/* Switch to the exit icon when the player is in fullscreen */\n.vjs-default-skin.vjs-fullscreen .vjs-fullscreen-control:before {\n  content: \"\\e00b\";\n}\n/* Big Play Button (play button at start)\n--------------------------------------------------------------------------------\nPositioning of the play button in the center or other corners can be done more\neasily in the skin designer. http://designer.videojs.com/\n*/\n.vjs-default-skin .vjs-big-play-button {\n  left: 0.5em;\n  top: 0.5em;\n  font-size: 3em;\n  display: block;\n  z-index: 2;\n  position: absolute;\n  width: 4em;\n  height: 2.6em;\n  text-align: center;\n  vertical-align: middle;\n  cursor: pointer;\n  opacity: 1;\n  /* Need a slightly gray bg so it can be seen on black backgrounds */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  border: 0.1em solid #3b4249;\n  /* border-radius */\n  border-radius: 0.8em;\n  /* box-shadow */\n  box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* Optionally center */\n.vjs-default-skin.vjs-big-play-centered .vjs-big-play-button {\n  /* Center it horizontally */\n  left: 50%;\n  margin-left: -2.1em;\n  /* Center it vertically */\n  top: 50%;\n  margin-top: -1.4em;\n}\n/* Hide if controls are disabled */\n.vjs-default-skin.vjs-controls-disabled .vjs-big-play-button {\n  display: none;\n}\n/* Hide when video starts playing */\n.vjs-default-skin.vjs-has-started .vjs-big-play-button {\n  display: none;\n}\n/* Hide on mobile devices. Remove when we stop using native controls\n    by default on mobile  */\n.vjs-default-skin.vjs-using-native-controls .vjs-big-play-button {\n  display: none;\n}\n.vjs-default-skin:hover .vjs-big-play-button,\n.vjs-default-skin .vjs-big-play-button:focus {\n  outline: 0;\n  border-color: #fff;\n  /* IE8 needs a non-glow hover state */\n  background-color: #505050;\n  background-color: rgba(50, 50, 50, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 3em #ffffff;\n  /* transition */\n  -webkit-transition: all 0s;\n  transition: all 0s;\n}\n.vjs-default-skin .vjs-big-play-button:before {\n  content: \"\\e001\";\n  font-family: VideoJS;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 2.6em;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  position: absolute;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-big-play-button {\n  display: none;\n}\n/* Error Display\n--------------------------------------------------------------------------------\n*/\n.vjs-error-display {\n  display: none;\n}\n.vjs-error .vjs-error-display {\n  display: block;\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-error-display:before {\n  content: 'X';\n  font-family: Arial;\n  font-size: 4em;\n  color: #666666;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 1;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  vertical-align: middle;\n  position: absolute;\n  left: 0;\n  top: 50%;\n  margin-top: -0.5em;\n  width: 100%;\n}\n.vjs-error-display div {\n  position: absolute;\n  bottom: 1em;\n  right: 0;\n  left: 0;\n  font-size: 1.4em;\n  text-align: center;\n  padding: 3px;\n  background: #000000;\n  background: rgba(0, 0, 0, 0.5);\n}\n.vjs-error-display a,\n.vjs-error-display a:visited {\n  color: #F4A460;\n}\n/* Loading Spinner\n--------------------------------------------------------------------------------\n*/\n.vjs-loading-spinner {\n  /* Should be hidden by default */\n  display: none;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  font-size: 4em;\n  line-height: 1;\n  width: 1em;\n  height: 1em;\n  margin-left: -0.5em;\n  margin-top: -0.5em;\n  opacity: 0.75;\n}\n/* Show the spinner when waiting for data and seeking to a new time */\n.vjs-waiting .vjs-loading-spinner,\n.vjs-seeking .vjs-loading-spinner {\n  display: block;\n  /* only animate when showing because it can be processor heavy */\n  /* animation */\n  -webkit-animation: spin 1.5s infinite linear;\n  animation: spin 1.5s infinite linear;\n}\n/* Errors are unrecoverable without user interaction so hide the spinner */\n.vjs-error .vjs-loading-spinner {\n  display: none;\n  /* ensure animation doesn't continue while hidden */\n  /* animation */\n  -webkit-animation: none;\n  animation: none;\n}\n.vjs-default-skin .vjs-loading-spinner:before {\n  content: \"\\e01e\";\n  font-family: VideoJS;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 1em;\n  height: 1em;\n  text-align: center;\n  text-shadow: 0em 0em 0.1em #000;\n}\n@-webkit-keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n  }\n}\n@keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n            transform: rotate(359deg);\n  }\n}\n/* Menu Buttons (Captions/Subtitles/etc.)\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-menu-button {\n  float: right;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-menu {\n  display: none;\n  position: absolute;\n  bottom: 0;\n  left: 0em;\n  /* (Width of vjs-menu - width of button) / 2 */\n  width: 0em;\n  height: 0em;\n  margin-bottom: 3em;\n  border-left: 2em solid transparent;\n  border-right: 2em solid transparent;\n  border-top: 1.55em solid #000000;\n  /* Same width top as ul bottom */\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n/* Button Pop-up Menu */\n.vjs-default-skin .vjs-menu-button .vjs-menu .vjs-menu-content {\n  display: block;\n  padding: 0;\n  margin: 0;\n  position: absolute;\n  width: 10em;\n  bottom: 1.5em;\n  /* Same bottom as vjs-menu border-top */\n  max-height: 15em;\n  overflow: auto;\n  left: -5em;\n  /* Width of menu - width of button / 2 */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  /* box-shadow */\n  box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);\n}\n.vjs-default-skin .vjs-menu-button:hover .vjs-control-content .vjs-menu,\n.vjs-default-skin .vjs-control-content .vjs-menu.vjs-lock-showing {\n  display: block;\n}\n/* prevent menus from opening while scrubbing (FF, IE) */\n.vjs-default-skin.vjs-scrubbing .vjs-menu-button:hover .vjs-control-content .vjs-menu {\n  display: none;\n}\n.vjs-default-skin .vjs-menu-button ul li {\n  list-style: none;\n  margin: 0;\n  padding: 0.3em 0 0.3em 0;\n  line-height: 1.4em;\n  font-size: 1.2em;\n  text-align: center;\n  text-transform: lowercase;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected {\n  background-color: #000;\n}\n.vjs-default-skin .vjs-menu-button ul li:focus,\n.vjs-default-skin .vjs-menu-button ul li:hover,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:focus,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:hover {\n  outline: 0;\n  color: #111;\n  /* background-color-with-alpha */\n  background-color: #ffffff;\n  background-color: rgba(255, 255, 255, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-menu-title {\n  text-align: center;\n  text-transform: uppercase;\n  font-size: 1em;\n  line-height: 2em;\n  padding: 0;\n  margin: 0 0 0.3em 0;\n  font-weight: bold;\n  cursor: default;\n}\n/* Subtitles Button */\n.vjs-default-skin .vjs-subtitles-button:before {\n  content: \"\\e00c\";\n}\n/* Captions Button */\n.vjs-default-skin .vjs-captions-button:before {\n  content: \"\\e008\";\n}\n/* Chapters Button */\n.vjs-default-skin .vjs-chapters-button:before {\n  content: \"\\e00c\";\n}\n.vjs-default-skin .vjs-chapters-button.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 24em;\n  left: -12em;\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-captions-button:focus .vjs-control-content:before,\n.vjs-default-skin .vjs-captions-button:hover .vjs-control-content:before {\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n/*\nREQUIRED STYLES (be careful overriding)\n================================================================================\nWhen loading the player, the video tag is replaced with a DIV,\nthat will hold the video tag or object tag for other playback methods.\nThe div contains the video playback element (Flash or HTML5) and controls,\nand sets the width and height of the video.\n\n** If you want to add some kind of border/padding (e.g. a frame), or special\npositioning, use another containing element. Otherwise you risk messing up\ncontrol positioning and full window mode. **\n*/\n.video-js {\n  background-color: #000;\n  position: relative;\n  padding: 0;\n  /* Start with 10px for base font size so other dimensions can be em based and\n     easily calculable. */\n  font-size: 10px;\n  /* Allow poster to be vertically aligned. */\n  vertical-align: middle;\n  /*  display: table-cell; */\n  /*This works in Safari but not Firefox.*/\n  /* Provide some basic defaults for fonts */\n  font-weight: normal;\n  font-style: normal;\n  /* Avoiding helvetica: issue #376 */\n  font-family: Arial, sans-serif;\n  /* Turn off user selection (text highlighting) by default.\n     The majority of player components will not be text blocks.\n     Text areas will need to turn user selection back on. */\n  /* user-select */\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n/* Playback technology elements expand to the width/height of the containing div\n    <video> or <object> */\n.video-js .vjs-tech {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n/* Fix for Firefox 9 fullscreen (only if it is enabled). Not needed when\n   checking fullScreenEnabled. */\n.video-js:-moz-full-screen {\n  position: absolute;\n}\n/* Fullscreen Styles */\nbody.vjs-full-window {\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  /* Fix for IE6 full-window. http://www.cssplay.co.uk/layouts/fixed.html */\n  overflow-y: auto;\n}\n.video-js.vjs-fullscreen {\n  position: fixed;\n  overflow: hidden;\n  z-index: 1000;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  right: 0;\n  width: 100% !important;\n  height: 100% !important;\n  /* IE6 full-window (underscore hack) */\n  _position: absolute;\n}\n.video-js:-webkit-full-screen {\n  width: 100% !important;\n  height: 100% !important;\n}\n.video-js.vjs-fullscreen.vjs-user-inactive {\n  cursor: none;\n}\n/* Poster Styles */\n.vjs-poster {\n  background-repeat: no-repeat;\n  background-position: 50% 50%;\n  background-size: contain;\n  background-color: #000000;\n  cursor: pointer;\n  margin: 0;\n  padding: 0;\n  position: absolute;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.vjs-poster img {\n  display: block;\n  margin: 0 auto;\n  max-height: 100%;\n  padding: 0;\n  width: 100%;\n}\n/* Hide the poster after the video has started playing */\n.video-js.vjs-has-started .vjs-poster {\n  display: none;\n}\n/* Don't hide the poster if we're playing audio */\n.video-js.vjs-audio.vjs-has-started .vjs-poster {\n  display: block;\n}\n/* Hide the poster when controls are disabled because it's clickable\n    and the native poster can take over */\n.video-js.vjs-controls-disabled .vjs-poster {\n  display: none;\n}\n/* Hide the poster when native controls are used otherwise it covers them */\n.video-js.vjs-using-native-controls .vjs-poster {\n  display: none;\n}\n/* Text Track Styles */\n/* Overall track holder for both captions and subtitles */\n.video-js .vjs-text-track-display {\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 3em;\n  right: 0;\n  pointer-events: none;\n}\n/* Captions Settings Dialog */\n.vjs-caption-settings {\n  position: relative;\n  top: 1em;\n  background-color: #000;\n  opacity: 0.75;\n  color: #FFF;\n  margin: 0 auto;\n  padding: 0.5em;\n  height: 15em;\n  font-family: Arial, Helvetica, sans-serif;\n  font-size: 12px;\n  width: 40em;\n}\n.vjs-caption-settings .vjs-tracksettings {\n  top: 0;\n  bottom: 2em;\n  left: 0;\n  right: 0;\n  position: absolute;\n  overflow: auto;\n}\n.vjs-caption-settings .vjs-tracksettings-colors,\n.vjs-caption-settings .vjs-tracksettings-font {\n  float: left;\n}\n.vjs-caption-settings .vjs-tracksettings-colors:after,\n.vjs-caption-settings .vjs-tracksettings-font:after,\n.vjs-caption-settings .vjs-tracksettings-controls:after {\n  clear: both;\n}\n.vjs-caption-settings .vjs-tracksettings-controls {\n  position: absolute;\n  bottom: 1em;\n  right: 1em;\n}\n.vjs-caption-settings .vjs-tracksetting {\n  margin: 5px;\n  padding: 3px;\n  min-height: 40px;\n}\n.vjs-caption-settings .vjs-tracksetting label {\n  display: block;\n  width: 100px;\n  margin-bottom: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting span {\n  display: inline;\n  margin-left: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting > div {\n  margin-bottom: 5px;\n  min-height: 20px;\n}\n.vjs-caption-settings .vjs-tracksetting > div:last-child {\n  margin-bottom: 0;\n  padding-bottom: 0;\n  min-height: 0;\n}\n.vjs-caption-settings label > input {\n  margin-right: 10px;\n}\n.vjs-caption-settings input[type=\"button\"] {\n  width: 40px;\n  height: 40px;\n}\n/* Hide disabled or unsupported controls */\n.vjs-hidden {\n  display: none !important;\n}\n.vjs-lock-showing {\n  display: block !important;\n  opacity: 1;\n  visibility: visible;\n}\n/*  In IE8 w/ no JavaScript (no HTML5 shim), the video tag doesn't register.\n    The .video-js classname on the video tag also isn't considered.\n    This optional paragraph inside the video tag can provide a message to users\n    about what's required to play video. */\n.vjs-no-js {\n  padding: 2em;\n  color: #ccc;\n  background-color: #333;\n  font-size: 1.8em;\n  font-family: Arial, sans-serif;\n  text-align: center;\n  width: 30em;\n  height: 15em;\n  margin: 0 auto;\n}\n.vjs-no-js a,\n.vjs-no-js a:visited {\n  color: #F4A460;\n}\n/* -----------------------------------------------------------------------------\nThe original source of this file lives at\nhttps://github.com/videojs/video.js/blob/master/src/css/video-js.less */\n.vpoll-form-overlay {\n  position: relative;\n  background-color: #9ba9b3;\n  width: 30%;\n  height: 40%;\n  color: #000;\n  font-size: 12px;\n}\n.vpoll-form-overlay form {\n  display: table;\n}\n.vpoll-form-overlay p {\n  display: table-row;\n}\n.vpoll-form-overlay label {\n  display: table-cell;\n  padding-right: 12px;\n}\n.vpoll-form-overlay input {\n  display: table-cell;\n}\n.close-thick {\n  color: #777;\n  font: 18px/100% arial, sans-serif;\n  position: absolute;\n  left: 0px;\n  text-decoration: none;\n  text-shadow: 0 1px 0 #fff;\n  top: 0px;\n}\n.close-thick:after {\n  content: '✖';\n  /* UTF-8 symbol */\n}\n.close-thick:hover {\n  cursor: pointer;\n}\n/* Dialog */\n.vpoll-chart-component {\n  background: #FFF;\n  border: 2px solid #ccc;\n  border-radius: 5px;\n  margin: 20px;\n  position: absolute;\n  width: 190px;\n  padding-left: 6px;\n  padding-top: 20px;\n  right: 0;\n  bottom: 15%;\n  opacity: 0.8;\n  max-height: 600px;\n  -webkit-transition: 3s max-height, 4s opacity;\n          transition: 3s max-height, 4s opacity;\n  overflow: hidden;\n}\n.vpoll-chart-component.hidden {\n  opacity: 0;\n  max-height: 0;\n}\n.poll-title {\n  margin: 3px 0 5px 0;\n  font-size: 14px;\n  color: #858586;\n}\n.poll-chart {\n  width: 200px;\n  height: 200px;\n}\n", ""]);
+	exports = module.exports = __webpack_require__(69)();
+	exports.push([module.id, "/*!\nVideo.js Default Styles (http://videojs.com)\nVersion GENERATED_AT_BUILD\nCreate your own skin at http://designer.videojs.com\n*/\n/* SKIN\n================================================================================\nThe main class name for all skin-specific styles. To make your own skin,\nreplace all occurrences of 'vjs-default-skin' with a new name. Then add your new\nskin name to your video tag instead of the default skin.\ne.g. <video class=\"video-js my-skin-name\">\n*/\n.vjs-default-skin {\n  color: #cccccc;\n}\n/* Custom Icon Font\n--------------------------------------------------------------------------------\nThe control icons are from a custom font. Each icon corresponds to a character\n(e.g. \"\\e001\"). Font icons allow for easy scaling and coloring of icons.\n*/\n@font-face {\n  font-family: 'VideoJS';\n  src: url("+__webpack_require__(70)+");\n  src: url("+__webpack_require__(70)+"?#iefix) format('embedded-opentype'), url("+__webpack_require__(68)+") format('woff'), url("+__webpack_require__(71)+") format('truetype'), url("+__webpack_require__(72)+"#icomoon) format('svg');\n  font-weight: normal;\n  font-style: normal;\n}\n/* Base UI Component Classes\n--------------------------------------------------------------------------------\n*/\n/* Slider - used for Volume bar and Seek bar */\n.vjs-default-skin .vjs-slider {\n  /* Replace browser focus highlight with handle highlight */\n  outline: 0;\n  position: relative;\n  cursor: pointer;\n  padding: 0;\n  /* background-color-with-alpha */\n  background-color: #333333;\n  background-color: rgba(51, 51, 51, 0.9);\n}\n.vjs-default-skin .vjs-slider:focus {\n  /* box-shadow */\n  box-shadow: 0 0 2em #ffffff;\n}\n.vjs-default-skin .vjs-slider-handle {\n  position: absolute;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-slider-handle:before {\n  content: \"\\e009\";\n  font-family: VideoJS;\n  font-size: 1em;\n  line-height: 1;\n  text-align: center;\n  text-shadow: 0em 0em 1em #fff;\n  position: absolute;\n  top: 0;\n  left: 0;\n  /* Rotate the square icon to make a diamond */\n  /* transform */\n  -webkit-transform: rotate(-45deg);\n  -ms-transform: rotate(-45deg);\n  transform: rotate(-45deg);\n}\n/* Control Bar\n--------------------------------------------------------------------------------\nThe default control bar that is a container for most of the controls.\n*/\n.vjs-default-skin .vjs-control-bar {\n  /* Start hidden */\n  display: none;\n  position: absolute;\n  /* Place control bar at the bottom of the player box/video.\n     If you want more margin below the control bar, add more height. */\n  bottom: 0;\n  /* Use left/right to stretch to 100% width of player div */\n  left: 0;\n  right: 0;\n  /* Height includes any margin you want above or below control items */\n  height: 3.0em;\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n}\n/* Show the control bar only once the video has started playing */\n.vjs-default-skin.vjs-has-started .vjs-control-bar {\n  display: block;\n  /* Visibility needed to make sure things hide in older browsers too. */\n  visibility: visible;\n  opacity: 1;\n  /* transition */\n  -webkit-transition: visibility 0.1s, opacity 0.1s;\n  transition: visibility 0.1s, opacity 0.1s;\n}\n/* Hide the control bar when the video is playing and the user is inactive  */\n.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  display: block;\n  visibility: hidden;\n  opacity: 0;\n  /* transition */\n  -webkit-transition: visibility 1s, opacity 1s;\n  transition: visibility 1s, opacity 1s;\n}\n.vjs-default-skin.vjs-controls-disabled .vjs-control-bar {\n  display: none;\n}\n.vjs-default-skin.vjs-using-native-controls .vjs-control-bar {\n  display: none;\n}\n/* The control bar shouldn't show after an error */\n.vjs-default-skin.vjs-error .vjs-control-bar {\n  display: none;\n}\n/* Don't hide the control bar if it's audio */\n.vjs-audio.vjs-default-skin.vjs-has-started.vjs-user-inactive.vjs-playing .vjs-control-bar {\n  opacity: 1;\n  visibility: visible;\n}\n/* IE8 is flakey with fonts, and you have to change the actual content to force\nfonts to show/hide properly.\n  - \"\\9\" IE8 hack didn't work for this\n  - Found in XP IE8 from http://modern.ie. Does not show up in \"IE8 mode\" in IE9\n*/\n@media \\0screen {\n  .vjs-default-skin.vjs-user-inactive.vjs-playing .vjs-control-bar :before {\n    content: \"\";\n  }\n}\n/* General styles for individual controls. */\n.vjs-default-skin .vjs-control {\n  outline: none;\n  position: relative;\n  float: left;\n  text-align: center;\n  margin: 0;\n  padding: 0;\n  height: 3.0em;\n  width: 4em;\n}\n/* Font button icons */\n.vjs-default-skin .vjs-control:before {\n  font-family: VideoJS;\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-control:focus:before,\n.vjs-default-skin .vjs-control:hover:before {\n  text-shadow: 0em 0em 1em #ffffff;\n}\n.vjs-default-skin .vjs-control:focus {\n  /*  outline: 0; */\n  /* keyboard-only users cannot see the focus on several of the UI elements when\n  this is set to 0 */\n}\n/* Hide control text visually, but have it available for screenreaders */\n.vjs-default-skin .vjs-control-text {\n  /* hide-visually */\n  border: 0;\n  clip: rect(0 0 0 0);\n  height: 1px;\n  margin: -1px;\n  overflow: hidden;\n  padding: 0;\n  position: absolute;\n  width: 1px;\n}\n/* Play/Pause\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-play-control {\n  width: 5em;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-play-control:before {\n  content: \"\\e001\";\n}\n.vjs-default-skin.vjs-playing .vjs-play-control:before {\n  content: \"\\e002\";\n}\n/* Playback toggle\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-playback-rate .vjs-playback-rate-value {\n  font-size: 1.5em;\n  line-height: 2;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: center;\n  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);\n}\n.vjs-default-skin .vjs-playback-rate.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 4em;\n  left: -2em;\n  list-style: none;\n}\n/* Volume/Mute\n-------------------------------------------------------------------------------- */\n.vjs-default-skin .vjs-mute-control,\n.vjs-default-skin .vjs-volume-menu-button {\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-mute-control:before,\n.vjs-default-skin .vjs-volume-menu-button:before {\n  content: \"\\e006\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-0:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-0:before {\n  content: \"\\e003\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-1:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-1:before {\n  content: \"\\e004\";\n}\n.vjs-default-skin .vjs-mute-control.vjs-vol-2:before,\n.vjs-default-skin .vjs-volume-menu-button.vjs-vol-2:before {\n  content: \"\\e005\";\n}\n.vjs-default-skin .vjs-volume-control {\n  width: 5em;\n  float: right;\n}\n.vjs-default-skin .vjs-volume-bar {\n  width: 5em;\n  height: 0.6em;\n  margin: 1.1em auto 0;\n}\n.vjs-default-skin .vjs-volume-level {\n  position: absolute;\n  top: 0;\n  left: 0;\n  height: 0.5em;\n  /* assuming volume starts at 1.0 */\n  width: 100%;\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-volume-bar .vjs-volume-handle {\n  width: 0.5em;\n  height: 0.5em;\n  /* Assumes volume starts at 1.0. If you change the size of the\n     handle relative to the volume bar, you'll need to update this value\n     too. */\n  left: 4.5em;\n}\n.vjs-default-skin .vjs-volume-handle:before {\n  font-size: 0.9em;\n  top: -0.2em;\n  left: -0.2em;\n  width: 1em;\n  height: 1em;\n}\n/* The volume menu button is like menu buttons (captions/subtitles) but works\n    a little differently. It needs to be possible to tab to the volume slider\n    without hitting space bar on the menu button. To do this we're not using\n    display:none to hide the slider menu by default, and instead setting the\n    width and height to zero. */\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu {\n  display: block;\n  width: 0;\n  height: 0;\n  border-top-color: transparent;\n}\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu .vjs-menu-content {\n  height: 0;\n  width: 0;\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing {\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n.vjs-default-skin .vjs-volume-menu-button:hover .vjs-menu .vjs-menu-content,\n.vjs-default-skin .vjs-volume-menu-button .vjs-menu.vjs-lock-showing .vjs-menu-content {\n  height: 2.9em;\n  width: 10em;\n}\n/* Progress\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-progress-control {\n  position: absolute;\n  left: 0;\n  right: 0;\n  width: auto;\n  font-size: 0.3em;\n  height: 1em;\n  /* Set above the rest of the controls. */\n  top: -1em;\n  /* Shrink the bar slower than it grows. */\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* On hover, make the progress bar grow to something that's more clickable.\n    This simply changes the overall font for the progress bar, and this\n    updates both the em-based widths and heights, as wells as the icon font */\n.vjs-default-skin:hover .vjs-progress-control {\n  font-size: .9em;\n  /* Even though we're not changing the top/height, we need to include them in\n      the transition so they're handled correctly. */\n  /* transition */\n  -webkit-transition: all 0.2s;\n  transition: all 0.2s;\n}\n/* Box containing play and load progresses. Also acts as seek scrubber. */\n.vjs-default-skin .vjs-progress-holder {\n  height: 100%;\n}\n/* Progress Bars */\n.vjs-default-skin .vjs-progress-holder .vjs-play-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress,\n.vjs-default-skin .vjs-progress-holder .vjs-load-progress div {\n  position: absolute;\n  display: block;\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  /* updated by javascript during playback */\n  width: 0;\n  /* Needed for IE6 */\n  left: 0;\n  top: 0;\n}\n.vjs-default-skin .vjs-play-progress {\n  /*\n    Using a data URI to create the white diagonal lines with a transparent\n      background. Surprisingly works in IE8.\n      Created using http://www.patternify.com\n    Changing the first color value will change the bar color.\n    Also using a paralax effect to make the lines move backwards.\n      The -50% left position makes that happen.\n  */\n  background: #66a8cc url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAGCAYAAADgzO9IAAAAP0lEQVQIHWWMAQoAIAgDR/QJ/Ub//04+w7ZICBwcOg5FZi5iBB82AGzixEglJrd4TVK5XUJpskSTEvpdFzX9AB2pGziSQcvAAAAAAElFTkSuQmCC) -50% 0 repeat;\n}\n.vjs-default-skin .vjs-load-progress {\n  background: #646464 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.2);\n}\n/* there are child elements of the load progress bar that represent the\n   specific time ranges that have been buffered */\n.vjs-default-skin .vjs-load-progress div {\n  background: #787878 /* IE8- Fallback */;\n  background: rgba(255, 255, 255, 0.1);\n}\n.vjs-default-skin .vjs-seek-handle {\n  width: 1.5em;\n  height: 100%;\n}\n.vjs-default-skin .vjs-seek-handle:before {\n  padding-top: 0.1em /* Minor adjustment */;\n}\n/* Live Mode\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin.vjs-live .vjs-time-controls,\n.vjs-default-skin.vjs-live .vjs-time-divider,\n.vjs-default-skin.vjs-live .vjs-progress-control {\n  display: none;\n}\n.vjs-default-skin.vjs-live .vjs-live-display {\n  display: block;\n}\n/* Live Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-live-display {\n  display: none;\n  font-size: 1em;\n  line-height: 3em;\n}\n/* Time Display\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-time-controls {\n  font-size: 1em;\n  /* Align vertically by making the line height the same as the control bar */\n  line-height: 3em;\n}\n.vjs-default-skin .vjs-current-time {\n  float: left;\n}\n.vjs-default-skin .vjs-duration {\n  float: left;\n}\n/* Remaining time is in the HTML, but not included in default design */\n.vjs-default-skin .vjs-remaining-time {\n  display: none;\n  float: left;\n}\n.vjs-time-divider {\n  float: left;\n  line-height: 3em;\n}\n/* Fullscreen\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-fullscreen-control {\n  width: 3.8em;\n  cursor: pointer;\n  float: right;\n}\n.vjs-default-skin .vjs-fullscreen-control:before {\n  content: \"\\e000\";\n}\n/* Switch to the exit icon when the player is in fullscreen */\n.vjs-default-skin.vjs-fullscreen .vjs-fullscreen-control:before {\n  content: \"\\e00b\";\n}\n/* Big Play Button (play button at start)\n--------------------------------------------------------------------------------\nPositioning of the play button in the center or other corners can be done more\neasily in the skin designer. http://designer.videojs.com/\n*/\n.vjs-default-skin .vjs-big-play-button {\n  left: 0.5em;\n  top: 0.5em;\n  font-size: 3em;\n  display: block;\n  z-index: 2;\n  position: absolute;\n  width: 4em;\n  height: 2.6em;\n  text-align: center;\n  vertical-align: middle;\n  cursor: pointer;\n  opacity: 1;\n  /* Need a slightly gray bg so it can be seen on black backgrounds */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  border: 0.1em solid #3b4249;\n  /* border-radius */\n  border-radius: 0.8em;\n  /* box-shadow */\n  box-shadow: 0px 0px 1em rgba(255, 255, 255, 0.25);\n  /* transition */\n  -webkit-transition: all 0.4s;\n  transition: all 0.4s;\n}\n/* Optionally center */\n.vjs-default-skin.vjs-big-play-centered .vjs-big-play-button {\n  /* Center it horizontally */\n  left: 50%;\n  margin-left: -2.1em;\n  /* Center it vertically */\n  top: 50%;\n  margin-top: -1.4em;\n}\n/* Hide if controls are disabled */\n.vjs-default-skin.vjs-controls-disabled .vjs-big-play-button {\n  display: none;\n}\n/* Hide when video starts playing */\n.vjs-default-skin.vjs-has-started .vjs-big-play-button {\n  display: none;\n}\n/* Hide on mobile devices. Remove when we stop using native controls\n    by default on mobile  */\n.vjs-default-skin.vjs-using-native-controls .vjs-big-play-button {\n  display: none;\n}\n.vjs-default-skin:hover .vjs-big-play-button,\n.vjs-default-skin .vjs-big-play-button:focus {\n  outline: 0;\n  border-color: #fff;\n  /* IE8 needs a non-glow hover state */\n  background-color: #505050;\n  background-color: rgba(50, 50, 50, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 3em #ffffff;\n  /* transition */\n  -webkit-transition: all 0s;\n  transition: all 0s;\n}\n.vjs-default-skin .vjs-big-play-button:before {\n  content: \"\\e001\";\n  font-family: VideoJS;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 2.6em;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  position: absolute;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-big-play-button {\n  display: none;\n}\n/* Error Display\n--------------------------------------------------------------------------------\n*/\n.vjs-error-display {\n  display: none;\n}\n.vjs-error .vjs-error-display {\n  display: block;\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 100%;\n}\n.vjs-error .vjs-error-display:before {\n  content: 'X';\n  font-family: Arial;\n  font-size: 4em;\n  color: #666666;\n  /* In order to center the play icon vertically we need to set the line height\n     to the same as the button height */\n  line-height: 1;\n  text-shadow: 0.05em 0.05em 0.1em #000;\n  text-align: center /* Needed for IE8 */;\n  vertical-align: middle;\n  position: absolute;\n  left: 0;\n  top: 50%;\n  margin-top: -0.5em;\n  width: 100%;\n}\n.vjs-error-display div {\n  position: absolute;\n  bottom: 1em;\n  right: 0;\n  left: 0;\n  font-size: 1.4em;\n  text-align: center;\n  padding: 3px;\n  background: #000000;\n  background: rgba(0, 0, 0, 0.5);\n}\n.vjs-error-display a,\n.vjs-error-display a:visited {\n  color: #F4A460;\n}\n/* Loading Spinner\n--------------------------------------------------------------------------------\n*/\n.vjs-loading-spinner {\n  /* Should be hidden by default */\n  display: none;\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  font-size: 4em;\n  line-height: 1;\n  width: 1em;\n  height: 1em;\n  margin-left: -0.5em;\n  margin-top: -0.5em;\n  opacity: 0.75;\n}\n/* Show the spinner when waiting for data and seeking to a new time */\n.vjs-waiting .vjs-loading-spinner,\n.vjs-seeking .vjs-loading-spinner {\n  display: block;\n  /* only animate when showing because it can be processor heavy */\n  /* animation */\n  -webkit-animation: spin 1.5s infinite linear;\n  animation: spin 1.5s infinite linear;\n}\n/* Errors are unrecoverable without user interaction so hide the spinner */\n.vjs-error .vjs-loading-spinner {\n  display: none;\n  /* ensure animation doesn't continue while hidden */\n  /* animation */\n  -webkit-animation: none;\n  animation: none;\n}\n.vjs-default-skin .vjs-loading-spinner:before {\n  content: \"\\e01e\";\n  font-family: VideoJS;\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 1em;\n  height: 1em;\n  text-align: center;\n  text-shadow: 0em 0em 0.1em #000;\n}\n@-webkit-keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n  }\n}\n@keyframes spin {\n  0% {\n    -webkit-transform: rotate(0deg);\n            transform: rotate(0deg);\n  }\n  100% {\n    -webkit-transform: rotate(359deg);\n            transform: rotate(359deg);\n  }\n}\n/* Menu Buttons (Captions/Subtitles/etc.)\n--------------------------------------------------------------------------------\n*/\n.vjs-default-skin .vjs-menu-button {\n  float: right;\n  cursor: pointer;\n}\n.vjs-default-skin .vjs-menu {\n  display: none;\n  position: absolute;\n  bottom: 0;\n  left: 0em;\n  /* (Width of vjs-menu - width of button) / 2 */\n  width: 0em;\n  height: 0em;\n  margin-bottom: 3em;\n  border-left: 2em solid transparent;\n  border-right: 2em solid transparent;\n  border-top: 1.55em solid #000000;\n  /* Same width top as ul bottom */\n  border-top-color: rgba(7, 40, 50, 0.5);\n  /* Same as ul background */\n}\n/* Button Pop-up Menu */\n.vjs-default-skin .vjs-menu-button .vjs-menu .vjs-menu-content {\n  display: block;\n  padding: 0;\n  margin: 0;\n  position: absolute;\n  width: 10em;\n  bottom: 1.5em;\n  /* Same bottom as vjs-menu border-top */\n  max-height: 15em;\n  overflow: auto;\n  left: -5em;\n  /* Width of menu - width of button / 2 */\n  /* background-color-with-alpha */\n  background-color: #07141e;\n  background-color: rgba(7, 20, 30, 0.7);\n  /* box-shadow */\n  box-shadow: -0.2em -0.2em 0.3em rgba(255, 255, 255, 0.2);\n}\n.vjs-default-skin .vjs-menu-button:hover .vjs-control-content .vjs-menu,\n.vjs-default-skin .vjs-control-content .vjs-menu.vjs-lock-showing {\n  display: block;\n}\n/* prevent menus from opening while scrubbing (FF, IE) */\n.vjs-default-skin.vjs-scrubbing .vjs-menu-button:hover .vjs-control-content .vjs-menu {\n  display: none;\n}\n.vjs-default-skin .vjs-menu-button ul li {\n  list-style: none;\n  margin: 0;\n  padding: 0.3em 0 0.3em 0;\n  line-height: 1.4em;\n  font-size: 1.2em;\n  text-align: center;\n  text-transform: lowercase;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected {\n  background-color: #000;\n}\n.vjs-default-skin .vjs-menu-button ul li:focus,\n.vjs-default-skin .vjs-menu-button ul li:hover,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:focus,\n.vjs-default-skin .vjs-menu-button ul li.vjs-selected:hover {\n  outline: 0;\n  color: #111;\n  /* background-color-with-alpha */\n  background-color: #ffffff;\n  background-color: rgba(255, 255, 255, 0.75);\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n.vjs-default-skin .vjs-menu-button ul li.vjs-menu-title {\n  text-align: center;\n  text-transform: uppercase;\n  font-size: 1em;\n  line-height: 2em;\n  padding: 0;\n  margin: 0 0 0.3em 0;\n  font-weight: bold;\n  cursor: default;\n}\n/* Subtitles Button */\n.vjs-default-skin .vjs-subtitles-button:before {\n  content: \"\\e00c\";\n}\n/* Captions Button */\n.vjs-default-skin .vjs-captions-button:before {\n  content: \"\\e008\";\n}\n/* Chapters Button */\n.vjs-default-skin .vjs-chapters-button:before {\n  content: \"\\e00c\";\n}\n.vjs-default-skin .vjs-chapters-button.vjs-menu-button .vjs-menu .vjs-menu-content {\n  width: 24em;\n  left: -12em;\n}\n/* Replacement for focus outline */\n.vjs-default-skin .vjs-captions-button:focus .vjs-control-content:before,\n.vjs-default-skin .vjs-captions-button:hover .vjs-control-content:before {\n  /* box-shadow */\n  box-shadow: 0 0 1em #ffffff;\n}\n/*\nREQUIRED STYLES (be careful overriding)\n================================================================================\nWhen loading the player, the video tag is replaced with a DIV,\nthat will hold the video tag or object tag for other playback methods.\nThe div contains the video playback element (Flash or HTML5) and controls,\nand sets the width and height of the video.\n\n** If you want to add some kind of border/padding (e.g. a frame), or special\npositioning, use another containing element. Otherwise you risk messing up\ncontrol positioning and full window mode. **\n*/\n.video-js {\n  background-color: #000;\n  position: relative;\n  padding: 0;\n  /* Start with 10px for base font size so other dimensions can be em based and\n     easily calculable. */\n  font-size: 10px;\n  /* Allow poster to be vertically aligned. */\n  vertical-align: middle;\n  /*  display: table-cell; */\n  /*This works in Safari but not Firefox.*/\n  /* Provide some basic defaults for fonts */\n  font-weight: normal;\n  font-style: normal;\n  /* Avoiding helvetica: issue #376 */\n  font-family: Arial, sans-serif;\n  /* Turn off user selection (text highlighting) by default.\n     The majority of player components will not be text blocks.\n     Text areas will need to turn user selection back on. */\n  /* user-select */\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n  user-select: none;\n}\n/* Playback technology elements expand to the width/height of the containing div\n    <video> or <object> */\n.video-js .vjs-tech {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n/* Fix for Firefox 9 fullscreen (only if it is enabled). Not needed when\n   checking fullScreenEnabled. */\n.video-js:-moz-full-screen {\n  position: absolute;\n}\n/* Fullscreen Styles */\nbody.vjs-full-window {\n  padding: 0;\n  margin: 0;\n  height: 100%;\n  /* Fix for IE6 full-window. http://www.cssplay.co.uk/layouts/fixed.html */\n  overflow-y: auto;\n}\n.video-js.vjs-fullscreen {\n  position: fixed;\n  overflow: hidden;\n  z-index: 1000;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  right: 0;\n  width: 100% !important;\n  height: 100% !important;\n  /* IE6 full-window (underscore hack) */\n  _position: absolute;\n}\n.video-js:-webkit-full-screen {\n  width: 100% !important;\n  height: 100% !important;\n}\n.video-js.vjs-fullscreen.vjs-user-inactive {\n  cursor: none;\n}\n/* Poster Styles */\n.vjs-poster {\n  background-repeat: no-repeat;\n  background-position: 50% 50%;\n  background-size: contain;\n  background-color: #000000;\n  cursor: pointer;\n  margin: 0;\n  padding: 0;\n  position: absolute;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.vjs-poster img {\n  display: block;\n  margin: 0 auto;\n  max-height: 100%;\n  padding: 0;\n  width: 100%;\n}\n/* Hide the poster after the video has started playing */\n.video-js.vjs-has-started .vjs-poster {\n  display: none;\n}\n/* Don't hide the poster if we're playing audio */\n.video-js.vjs-audio.vjs-has-started .vjs-poster {\n  display: block;\n}\n/* Hide the poster when controls are disabled because it's clickable\n    and the native poster can take over */\n.video-js.vjs-controls-disabled .vjs-poster {\n  display: none;\n}\n/* Hide the poster when native controls are used otherwise it covers them */\n.video-js.vjs-using-native-controls .vjs-poster {\n  display: none;\n}\n/* Text Track Styles */\n/* Overall track holder for both captions and subtitles */\n.video-js .vjs-text-track-display {\n  position: absolute;\n  top: 0;\n  left: 0;\n  bottom: 3em;\n  right: 0;\n  pointer-events: none;\n}\n/* Captions Settings Dialog */\n.vjs-caption-settings {\n  position: relative;\n  top: 1em;\n  background-color: #000;\n  opacity: 0.75;\n  color: #FFF;\n  margin: 0 auto;\n  padding: 0.5em;\n  height: 15em;\n  font-family: Arial, Helvetica, sans-serif;\n  font-size: 12px;\n  width: 40em;\n}\n.vjs-caption-settings .vjs-tracksettings {\n  top: 0;\n  bottom: 2em;\n  left: 0;\n  right: 0;\n  position: absolute;\n  overflow: auto;\n}\n.vjs-caption-settings .vjs-tracksettings-colors,\n.vjs-caption-settings .vjs-tracksettings-font {\n  float: left;\n}\n.vjs-caption-settings .vjs-tracksettings-colors:after,\n.vjs-caption-settings .vjs-tracksettings-font:after,\n.vjs-caption-settings .vjs-tracksettings-controls:after {\n  clear: both;\n}\n.vjs-caption-settings .vjs-tracksettings-controls {\n  position: absolute;\n  bottom: 1em;\n  right: 1em;\n}\n.vjs-caption-settings .vjs-tracksetting {\n  margin: 5px;\n  padding: 3px;\n  min-height: 40px;\n}\n.vjs-caption-settings .vjs-tracksetting label {\n  display: block;\n  width: 100px;\n  margin-bottom: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting span {\n  display: inline;\n  margin-left: 5px;\n}\n.vjs-caption-settings .vjs-tracksetting > div {\n  margin-bottom: 5px;\n  min-height: 20px;\n}\n.vjs-caption-settings .vjs-tracksetting > div:last-child {\n  margin-bottom: 0;\n  padding-bottom: 0;\n  min-height: 0;\n}\n.vjs-caption-settings label > input {\n  margin-right: 10px;\n}\n.vjs-caption-settings input[type=\"button\"] {\n  width: 40px;\n  height: 40px;\n}\n/* Hide disabled or unsupported controls */\n.vjs-hidden {\n  display: none !important;\n}\n.vjs-lock-showing {\n  display: block !important;\n  opacity: 1;\n  visibility: visible;\n}\n/*  In IE8 w/ no JavaScript (no HTML5 shim), the video tag doesn't register.\n    The .video-js classname on the video tag also isn't considered.\n    This optional paragraph inside the video tag can provide a message to users\n    about what's required to play video. */\n.vjs-no-js {\n  padding: 2em;\n  color: #ccc;\n  background-color: #333;\n  font-size: 1.8em;\n  font-family: Arial, sans-serif;\n  text-align: center;\n  width: 30em;\n  height: 15em;\n  margin: 0 auto;\n}\n.vjs-no-js a,\n.vjs-no-js a:visited {\n  color: #F4A460;\n}\n/* -----------------------------------------------------------------------------\nThe original source of this file lives at\nhttps://github.com/videojs/video.js/blob/master/src/css/video-js.less */\n.vpoll-form-overlay {\n  position: relative;\n  background-color: #9ba9b3;\n  width: 30%;\n  height: 40%;\n  color: #000;\n  font-size: 12px;\n}\n.vpoll-form-overlay form {\n  display: table;\n}\n.vpoll-form-overlay p {\n  display: table-row;\n}\n.vpoll-form-overlay label {\n  display: table-cell;\n  padding-right: 12px;\n}\n.vpoll-form-overlay input {\n  display: table-cell;\n}\n.close-thick {\n  color: #777;\n  font: 18px/100% arial, sans-serif;\n  position: absolute;\n  left: 0px;\n  text-decoration: none;\n  text-shadow: 0 1px 0 #fff;\n  top: 0px;\n}\n.close-thick:after {\n  content: '✖';\n  /* UTF-8 symbol */\n}\n.close-thick:hover {\n  cursor: pointer;\n}\n/* Dialog */\n.vpoll-chart-component {\n  background: #FFF;\n  border: 2px solid #ccc;\n  border-radius: 5px;\n  margin: 20px;\n  position: absolute;\n  width: 190px;\n  padding-left: 6px;\n  padding-top: 20px;\n  right: 0;\n  bottom: 15%;\n  opacity: 0.8;\n  max-height: 600px;\n  -webkit-transition: 3s max-height, 4s opacity;\n          transition: 3s max-height, 4s opacity;\n  overflow: hidden;\n}\n.vpoll-chart-component.hidden {\n  opacity: 0;\n  max-height: 0;\n}\n.poll-title {\n  margin: 3px 0 5px 0;\n  font-size: 14px;\n  color: #858586;\n}\n.poll-chart {\n  width: 200px;\n  height: 200px;\n}\n", ""]);
 
 /***/ },
-/* 67 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = "data:application/font-woff;base64,d09GRk9UVE8AAAnMAAsAAAAADWgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABDRkYgAAABCAAABokAAAgsXGkfVUZGVE0AAAeUAAAAHAAAABxxb8IrR0RFRgAAB7AAAAAiAAAAJgAnADxPUy8yAAAH1AAAAEMAAABgVDdTq2NtYXAAAAgYAAAAVgAAAWr6rrHraGVhZAAACHAAAAAsAAAANgaEyq9oaGVhAAAInAAAABwAAAAkCSAFLWhtdHgAAAi4AAAAJwAAAEgr1gKfbWF4cAAACOAAAAAGAAAABgAWUABuYW1lAAAI6AAAANUAAAGk8SNjJXBvc3QAAAnAAAAADAAAACAAAwAAeJxlVX9MW9cVvhf88K0Bt2txSTfLxNsSqkZaITjdgrZ2KaZiWYaI47lkCYTgphB+mFB+xFgZJDamqa+TAH4EkoDVNKRA3eF2UEqaJqHENKiVUAJI2zrSLkWZNO2P/dPqPnyg2r2A00zTue87737nfee943vuNUYqFcIYk8P2muqaGgfCcQijXCUDKZlY2RqnZMUrG1Q0KZ4mqQwa9Eij7VlKH9wkqWmuXiqOWiU9TnhUj9Bjepz5Az1K0qv3Po6eEqnikYQISkaPo1SkR0a0GW1BGWgbykYvIDP6DcpHe1AhKkKl6BC3KlTXkNGQ2bA1oyE3I2MVMgVsFZAlwCRgm4DnBPxcwC8EbBewQ8CLAnIEmAXkcshchZcacp/jCX+WsV5srGaE8Ov4JH4D+zDFfnwKn8ZncDvuwJ04gGXchc/ibtyDz+Hz+AJ6MlaVGmnQU+hptINXUYiq0S30Bb6Jb8d1xL0Z96/4syqN6j+SVVKoVpgia6Ny1KrbqAHTikln1GiZdWlet5SynLLCL0nLUviUza/IMJ+gWJfk2L1W2RSVdD/WaJUrrEb3Ew08vfSMmC69wlJ0P9XAC/98iIzOR7Xv61poc7tbdgbpUDC4uHiVEcoe42MfI1mLa2wwOESDTvKtcQo2UniGj92w0Wh0u5vbWiiB5+//X2ZFfDzML8ts9VJkSbu68CqO353XR99K0KvuKhd0PpbX+kXJZGv3sc4W+eAQ7D0LTRScFOzHS6tb3Mda3S2lVu8vT0IeOQ15Hb8a3SM3n/d2e0Yrmf0Ec77Bmk6xvV0fhLoD5zs6e8Zudv7Nz/LI8t8/0h1nxl9/CT/kn/foFoiHXHhpEeLZpjRe3sI/upmRgCGh7eUG+35KXmye++u3Q59cTxungxVnLESJPtnCjDu+hB9xtXZd/fX36p41tZeri/5HPVDRbiFrS7Mkr3DjyyEm5ohldjYSmZ21RMxmi8VsYP2gWmXvTEVm7+yeyjVbducamBn6deWDjuHhwcHhYcdgebnDUW4AlWAHHGHBhh0D5WU1NWUGEBmoOva0gVL194p+FouFB9Zi4ZqBsnIH11UqozxkGyuZmBgbmxChiZIxm62kxGbI4u+xhypHRkKhkZHKkN1eWWk3aBWrksLbMFqv1Is25AubomNh1gT54OImfDjtCD1yqvY0xHFLPQpPnCRvq2//6dNpeod2+WRfF5C/7BBtlUqYizWxfBY2rHdImCdo4igSNvG03LNVz2ecTwNZxYxMDWowcnvgmZqznBc+jU0tT+mytwMuBjUVA49n392+UMwwZWo+xhm+u0Bm8iiVIBVSKVQw7j7f9VX5fXqffjX8+WcslaVSVgHckZkZ6W72OODVTOpiwNuziXbpGybrimmp01FNlnNYleQP+ANUprIv4AsQRTCD1aPOcUoW5+YWF3PmsrJycrLSqNvv8Xu4Aqokx1BpsJgSwWfN5SzybhkNDg5xLY/5PD4PdRPBx/QGvv8Vq843c2zmyK3a6Vdu7hvff8USzr+Uf2nn2Z2+nb7f/rGgtqD294cOFJEDReXW+oL6guO7/NzO/a7f0m957+UPS8ZLJioiDZH66RPTfjLtv3Vu8tLkpWvDox9+MBa6fnGy5115+EyYnEkYHhwIp7WrN8Hzunrb4X0H7Qftf6iyNdoaLW6L3+Lf01N4sfCt/e8eGjk0Un316HVy9Ib7E/+kf7J74uK1ix+Hxv/83vvhK4MfB68FJ+Qbvgnf9ZarjeSjxrGq4VfDr759ILivb3+g0LeXUErbJFrRXxM66S0/cfhYJVnvghCFRqhrhaEO1sZ2MRtrpKJT8qEIaKxVH7TEd7wlQpQ1srpONuSFNtgFNuAC3oz5rIjRWD/HeiqN/5LsGx1lVkjvl7x9rb2eXnKPJYOe6SF5m+QKuALODlLHNoOV1sFmyel1eVweAsn3QA/6e5AseVytLm8TgfTXKFhZ+mtSR1OnS3YREyTzHHqm/Vq64On19HlJP6QzK+1n6VJfR2/gQoAwrYnxF5lYsiT3dvZ29JFl3KozWyJrB0LEsnogiG9MoTqapOF/hk8gCeMNGQWeG3TZBCZmAitYt/ybWXkFfCYlijlnTcsmShURN4mYlHj58ptuWkZWbqtpWaO79jIBL/OCeCiFmaiU+PBBv7BA2YbshYfPd6aBRF4fcEfWj/bEZtrS7u5y9tF3gn0P7ZI1oi/4Du1zxnYLiW0X94mWVe1/AVE82XMAAAAAAAABAAAAANDR138AAAAAz5mnxQAAAADRBELmeJxjYGRgYOABYjEGOQYmBkYgFAViFqAIExAzQjAACdkAZAAAeJxjYGb+xTiBgZWBgWkm0xkGBoZ+CM34msGYkZMBFTAKIHEC0lxTGBwYGJ8xMB/4f4ABSAJ5QDVwBQpAyAgAobYMfwB4nGNgYGBmgGAZBkYGEEgB8hjBfBYGDyDNx8DBwMTABhRTeMD3QP4Zw/+///+DVSo8YHggB+Uz/n+swCL/VUoUqhsFMLIBMRO6KCpgxi895AEAetoSOQAAeJxjYGQAg2MiZgnx/DZfGbhZwPyLLM4yCPr/LtY45gNALgcDE0gUAOkeCHF4nGNgZGBgPvD/AAMDaxwDA5hkZEAFfABctgNZeJxjYEAAJiBmgeADQNzAguAzsDhAxFnjwHQDgwVcmzyIAABxXQOhAAAAUAAAFgAAeJx1zT0KwjAcBfDXL8UKIiguLh0FoVg8goMU6eLg4tTWIAVtIOpQPIBHcPQ2grfy1f4dG0j6y0tfAmCINyz8hy220MVIbNNzsUOvxC69F3vo4y7uMH+KfYzxYctye/JCYwsDqrFNT8UOvRS79EbsYYJc3GH+EPuY4VVfW/BY48ypUXKb67PWxBYKR9xwQgrDrTreTqlp/78t3/EegwvP6zxAhBALxspcCl0GUbho767ZLX/9FFd+D+xnqLjGv0byb6xVqUx6VYcgq4I410ld/wJ2ozpzAAAAeJxjYGbACwAAfQAE"
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -28056,25 +28335,25 @@
 
 
 /***/ },
-/* 69 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "062f06670a3b82ffb0732701c9d1e098.eot"
 
 /***/ },
-/* 70 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "0bfbb17e6e700d4815bc405d9fb8d65a.ttf"
 
 /***/ },
-/* 71 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "17371a8f614b03b01b31a94d43cab2c4.svg"
 
 /***/ },
-/* 72 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -28299,12 +28578,12 @@
 
 
 /***/ },
-/* 73 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var vjs = __webpack_require__(2);
+	var vjs = __webpack_require__(6);
 
 	vjs.Chart = vjs.Component.extend({
 	  init: function init(player, options) {
@@ -28341,12 +28620,12 @@
 	});
 
 /***/ },
-/* 74 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var vjs = __webpack_require__(2);
+	var vjs = __webpack_require__(6);
 
 	vjs.FormPoll = vjs.Component.extend({
 	  init: function init(player, options) {
@@ -28357,7 +28636,7 @@
 	      className: 'vpoll-form-overlay vjs-hidden'
 	    });
 
-	    var formElements = '<fieldset><legend> Question to ask </legend>\n      <p><label for="question">Question: </label>\n      <input type="text" name="question" id="question" value=""></p></fieldset>\n      <fieldset><legend> Possible answers </legend>\n      <p><label for="alt_1">Alternative 1: </label>\n      <input type="text" name="question" id="alt_1" value=""></p>\n      <p><label for="alt_2">Alternative 2: </label>\n      <input type="text" name="question" id="alt_2" value=""></p></fieldset>\n      <p><input type="button" value="Submit" onClick="sendPoll()"></p>';
+	    var formElements = '<fieldset><legend> Question to ask </legend>\n      <p><label for="question">Question: </label>\n      <input type="text" class="vpoll-form-poll-question" name="question" id="question" value=""></p></fieldset>\n      <fieldset><legend> Possible answers </legend>\n      <p><label for="alt_1">Alternative 1: </label>\n      <input type="text" class="vpoll-form-poll-alt1" name="question" id="alt_1" value=""></p>\n      <p><label for="alt_2">Alternative 2: </label>\n      <input type="text" class="vpoll-form-poll-alt2" name="question" id="alt_2" value=""></p></fieldset>\n      <p><input type="button" class="vpoll-form-poll-submit" value="Submit"></p>';
 
 	    var form = vjs.createEl('form', {
 	      className: 'vjs-form',
@@ -28366,6 +28645,14 @@
 
 	    overlay.appendChild(form);
 
+	    form.querySelector('.vpoll-form-poll-submit').addEventListener('click', function () {
+	      var question = form.querySelector('.vpoll-form-poll-question').value;
+	      var alt1 = form.querySelector('.vpoll-form-poll-alt1').value;
+	      var alt2 = form.querySelector('.vpoll-form-poll-alt2').value;
+
+	      window.sendPoll({ question: question, alternatives: [alt1, alt2] });
+	    }, false);
+
 	    return overlay;
 	  }
 	});
@@ -28373,12 +28660,12 @@
 	vjs.FormPoll.prototype.options_ = {};
 
 /***/ },
-/* 75 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _Object$defineProperty = __webpack_require__(5)["default"];
+	var _Object$defineProperty = __webpack_require__(1)["default"];
 
 	_Object$defineProperty(exports, "__esModule", {
 	    value: true
@@ -28386,7 +28673,7 @@
 
 	exports["default"] = chartTest;
 
-	var _barchart = __webpack_require__(63);
+	var _barchart = __webpack_require__(62);
 
 	function chartTest(barChart, chartCmp) {
 	    setTimeout(function () {
