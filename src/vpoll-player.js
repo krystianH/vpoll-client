@@ -7,9 +7,8 @@ require('./form-poll-component');
 import vjs from 'video.js';
 import hls from 'videojs-contrib-hls';
 import io from 'socket.io-client';
-import chart from 'chart.js';
+import {initChart, updateChart, setupChart, getSampleCreate, getSampleUpdate} from './barchart';
 import uuid from 'node-uuid';
-import barChart from './barchart';
 
 import 'videojs-contrib-media-sources';
 import 'videojs-contrib-hls';
@@ -22,22 +21,28 @@ export default function vPollPlayer(elementId, options) {
   let player = vjs(elementId, options);
   let clientID = uuid.v4(); // TODO: this should be persisted and reused in localStorage or similar
 
-  let socket = window.socket = io(options.socketUrl);
-
-  socket.on('message', (msg) => {
-    console.log(msg);
-    if (msg.type === 'respPoll') {
-      //update poll
-    }
-  });
-
   let chartComponent = new vjs.Chart(player, {});
   player.addChild(chartComponent);
 
   let pollComponent = new vjs.FormPoll(player, {});
   player.addChild(pollComponent);
 
-  barChart(chartComponent);
+  let barChart = window.barChart = initChart(chartComponent);;
+
+  let socket = window.socket = io(options.socketUrl);
+
+  socket.on('message', (msg) => {
+    console.log(msg);
+    if (msg.type === 'respPoll') {
+    	updateChart(barChart,chartComponent,msg);
+    	chartComponent.show();
+    }
+    else if (msg.type === 'createPoll') {
+    	setupChart(barChart,chartComponent,msg);
+    }
+  });
+ 
+  require('./chart-test')(barChart,chartComponent); //for chart testing
 
   // Poll form calls on this function onSubmit
   window.sendPoll = function({ question, alternatives }) {
